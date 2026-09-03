@@ -1,0 +1,180 @@
+/*
+=========================================================
+ MISSING CHILD RESCUE NETWORK — PROFESSIONAL CSS
+ Primary brand color: #e02323
+
+ Includes:
+ - Responsive navigation
+ - Professional buttons
+ - Hero styling
+ - Module / feature cards
+ - Statistics
+ - Dashboard / case cards
+ - Notifications
+ - Search & forms
+ - Emergency section
+ - Footer
+ - Hover effects
+ - Scroll reveal classes
+ - Gentle page transitions
+ - Floating animations
+ - Responsive layouts
+ - Reduced-motion accessibility
+
+ Usage:
+ <link rel="stylesheet" href="missing-child-rescue-network.css">
+=========================================================
+*/
+
+/* =====================================================
+   1. DESIGN TOKENS / GLOBAL
+   ===================================================== */
+
+:root {
+  --primary: #e02323;
+  --primary-dark: #bd1818;
+  --primary-light: #fff0f0;
+  --primary-soft: #fff7f7;
+
+  --text: #171717;
+  --muted: #69707a;
+  --white: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f8f9fb;
+  --border: #e8eaee;
+
+  --success: #22a55a;
+  --warning: #ee9b17;
+  --info: #3787d6;
+  --danger: #e02323;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-xl: 30px;
+
+  --shadow-sm: 0 4px 16px rgba(20, 20, 20, .05);
+  --shadow-md: 0 12px 35px rgba(20, 20, 20, .08);
+  --shadow-lg: 0 22px 60px rgba(20, 20, 20, .12);
+
+  --container: 1240px;
+  --header-height: 76px;
+
+  --ease: cubic-bezier(.2, .75, .25, 1);
+  --transition: 280ms var(--ease);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 90px;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: hidden;
+  color: var(--text);
+  background: var(--surface-2);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+               BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.6;
+}
+
+body.page-ready {
+  animation: pageIn 650ms var(--ease) both;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.container {
+  width: min(calc(100% - 40px), var(--container));
+  margin-inline: auto;
+}
+
+.section {
+  padding: 80px 0;
+}
+
+.section--compact {
+  padding: 56px 0;
+}
+
+.section-heading {
+  max-width: 680px;
+  margin-bottom: 34px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: var(--primary);
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 24px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin-top: 0;
+  line-height: 1.15;
+  letter-spacing: -.025em;
+}
+
+h1 {
+  font-size: clamp(2.4rem, 5vw, 4.5rem);
+}
+
+h2 {
+  font-size: clamp(1.8rem, 3.2vw, 2.8rem);
+}
+
+h3 {
+  font-size: 1.15rem;
+}
+
+p {
+  margin-top: 0;
+}
+
+.muted {
+  color: var(--muted);
+}
+
