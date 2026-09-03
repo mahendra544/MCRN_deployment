@@ -112,7 +112,12 @@ button {
 
   font-weight: bold;
 }
-
+.logo-box img {
+  width: 45px;
+  height: 45px;
+  object-fit: contain;
+  display: block;
+}
 .admin-logo h2 {
   font-size: 20px;
   font-weight: 700;
@@ -125,6 +130,12 @@ button {
   font-size: 13px;
   color: rgba(255, 255, 255, 0.75);
 }
+logoImage: {
+  width: "100%",
+  height: "100%",
+  objectFit: "contain",
+  borderRadius: 8,
+},
 
 .portal-title {
   padding: 24px 24px 10px;

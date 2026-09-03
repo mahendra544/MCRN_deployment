@@ -1,10 +1,10 @@
 import React from "react";
-
+import logo from "./logo.png";
 function Sidebar({ activePage, setActivePage, sidebarOpen, setSidebarOpen }) {
   const menuItems = [
     { id: "dashboard", icon: "🏠", label: "Dashboard" },
     { id: "verification", icon: "✓", label: "Case Verification" },
-    { id: "cases", icon: "📁", label: "All Cases" },
+    { id: "cases", icon: "📁", label: "Case Management" },
     { id: "assignment", icon: "➜", label: "Case Assignment" },
     { id: "police", icon: "👮", label: "Police Management" },
     { id: "users", icon: "👤", label: "User Management" },
@@ -21,7 +21,11 @@ function Sidebar({ activePage, setActivePage, sidebarOpen, setSidebarOpen }) {
   return (
     <aside className={`admin-sidebar ${sidebarOpen ? "open" : ""}`}>
       <div className="admin-logo">
-        <div className="logo-box">MC</div>
+        <div className="logo-box">
+           <img src={logo} alt="Missing Child Rescue Network Logo" />
+      
+
+        </div>
         <div>
           <h2>Missing Child</h2>
           <h3>Rescue Network</h3>

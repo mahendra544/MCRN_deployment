@@ -12,9 +12,7 @@ import UserManagement from "./UserManagement";
 import Analytics from "./Analytics";
 import Notifications from "./Notifications";
 import AuditLogs from "./AuditLogs";
-
 import "./admin-dashboard.css";
-
 function AdminDashboard() {
   const [activePage, setActivePage] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -43,7 +41,6 @@ function AdminDashboard() {
         return <Dashboard />;
     }
   };
-
   return (
     <div className="admin-layout">
       <Sidebar
