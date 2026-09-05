@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-export default function AdminLogin({onLogin,onRegister}) {
+export default function AdminLogin({onLogin,onForgotPassword}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -24,25 +24,68 @@ export default function AdminLogin({onLogin,onRegister}) {
     return next;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const next = validate();
-    setErrors(next);
 
-    if (Object.keys(next).length > 0) return;
+    if (Object.keys(next).length > 0) {
+      setErrors(next);
+      return;
+    }
 
+    // KEEP ME SIGNED IN MUST BE CHECKED
+    if (!remember) {
+      setErrors({
+        remember: "Please select 'Keep me signed in' to continue.",
+      });
+      return;
+    }
+
+    setErrors({});
     setSubmitting(true);
 
-    // Connect this to your backend later:
-    // POST /api/admin/login
-    setTimeout(() => {
+    try {
+      const response = await fetch("http://localhost:5000/api/admin/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrors({
+          password: data.message || "Login failed.",
+        });
+
+        setSubmitting(false);
+        return;
+      }
+
+      // Login successful
+      // This happens ONLY if checkbox is checked
+      localStorage.setItem("adminLoggedIn", "true");
+
       setSubmitting(false);
+
+      // Open Admin Portal
       onLogin();
-       if (keepSignedIn) {
-    localStorage.setItem("adminLoggedIn", "true");
-  }
-    }, 900);
+
+    } catch (error) {
+      console.error("Login error:", error);
+
+      setErrors({
+        password: "Unable to connect to the server.",
+      });
+
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -160,17 +203,27 @@ export default function AdminLogin({onLogin,onRegister}) {
         }
       `}</style>
 
-      {/* Top brand bar - matches the admin dashboard styling */}
       <div style={styles.topBar}>
         <div style={styles.brand}>
+
           <div style={styles.logo}>
-            <img src="src/logo.png" alt="Missing Child Rescue Network" style={styles.logoImage} />
+            <img
+              src="src/logo.png"
+              alt="Missing Child Rescue Network"
+              style={styles.logoImage}
+            />
           </div>
 
           <div>
-            <div style={styles.brandTitle}>Missing Child</div>
-            <div style={styles.brandSubtitle}>Rescue Network</div>
+            <div style={styles.brandTitle}>
+              Missing Child
+            </div>
+
+            <div style={styles.brandSubtitle}>
+              Rescue Network
+            </div>
           </div>
+
         </div>
 
         <div style={styles.secureBadge}>
@@ -179,14 +232,25 @@ export default function AdminLogin({onLogin,onRegister}) {
         </div>
       </div>
 
-      {/* Main login area */}
-      <main className="admin-login-page" style={styles.main}>
-        <div className="admin-login-card" style={styles.card}>
-          {/* Red side panel */}
-          <div style={styles.sidePanel}>
-            <div style={styles.sideIcon}>🛡️</div>
+      <main
+        className="admin-login-page"
+        style={styles.main}
+      >
 
-            <h2 style={styles.sideHeading}>Admin Portal</h2>
+        <div
+          className="admin-login-card"
+          style={styles.card}
+        >
+
+          <div style={styles.sidePanel}>
+
+            <div style={styles.sideIcon}>
+              🛡️
+            </div>
+
+            <h2 style={styles.sideHeading}>
+              Admin Portal
+            </h2>
 
             <p style={styles.sideText}>
               Manage missing child cases, verify reports and coordinate
@@ -196,110 +260,218 @@ export default function AdminLogin({onLogin,onRegister}) {
             <div style={styles.sideDivider}></div>
 
             <div style={styles.sidePoint}>
-              <span style={styles.checkCircle}>✓</span>
+              <span style={styles.checkCircle}>
+                ✓
+              </span>
               Case verification
             </div>
 
             <div style={styles.sidePoint}>
-              <span style={styles.checkCircle}>✓</span>
+              <span style={styles.checkCircle}>
+                ✓
+              </span>
               Police coordination
             </div>
 
             <div style={styles.sidePoint}>
-              <span style={styles.checkCircle}>✓</span>
+              <span style={styles.checkCircle}>
+                ✓
+              </span>
               Rescue management
             </div>
+
           </div>
 
-          {/* Login form */}
           <div style={styles.formArea}>
+
             <div style={styles.statusRow}>
               <span style={styles.statusDot}></span>
-              <span style={styles.statusText}>NETWORK STATUS — OPERATIONAL</span>
+
+              <span style={styles.statusText}>
+                NETWORK STATUS — OPERATIONAL
+              </span>
             </div>
 
-            <h1 style={styles.heading}>Welcome back, Admin 👋</h1>
+            <h1 style={styles.heading}>
+              Welcome back, Admin 👋
+            </h1>
 
             <p style={styles.subtext}>
               Sign in to access the Missing Child Rescue Network admin dashboard.
             </p>
 
-            <form onSubmit={handleSubmit} noValidate style={{ marginTop: 28 }}>
+            <form
+              onSubmit={handleSubmit}
+              noValidate
+              style={{ marginTop: 28 }}
+            >
+
+              {/* EMAIL */}
+
               <div style={styles.field}>
-                <label htmlFor="email" style={styles.label}>
+
+                <label
+                  htmlFor="email"
+                  style={styles.label}
+                >
                   Admin Email
                 </label>
 
                 <input
                   id="email"
                   type="email"
-                  className={`admin-login-input${errors.email ? " has-error" : ""}`}
+                  className={`admin-login-input${
+                    errors.email ? " has-error" : ""
+                  }`}
                   placeholder="admin@rescuenetwork.org"
                   value={email}
                   onChange={(e) => {
+
                     setEmail(e.target.value);
+
                     if (errors.email) {
-                      setErrors((prev) => ({ ...prev, email: "" }));
+                      setErrors((prev) => ({
+                        ...prev,
+                        email: "",
+                      }));
                     }
+
                   }}
                   autoComplete="username"
                 />
 
                 {errors.email && (
-                  <p style={styles.errorText}>{errors.email}</p>
+                  <p style={styles.errorText}>
+                    {errors.email}
+                  </p>
                 )}
+
               </div>
 
-              <div style={{ ...styles.field, marginTop: 18 }}>
+
+              {/* PASSWORD */}
+
+              <div
+                style={{
+                  ...styles.field,
+                  marginTop: 18
+                }}
+              >
+
                 <div style={styles.labelRow}>
-                  <label htmlFor="password" style={styles.label}>
+
+                  <label
+                    htmlFor="password"
+                    style={styles.label}
+                  >
                     Password
                   </label>
 
                   <button
                     type="button"
                     className="show-password"
-                    onClick={() => setShowPassword((s) => !s)}
+                    onClick={() =>
+                      setShowPassword((s) => !s)
+                    }
                   >
                     {showPassword ? "Show" : "Hide"}
                   </button>
+
                 </div>
 
                 <input
                   id="password"
-                  type={showPassword ? "text" : "password"}
-                  className={`admin-login-input${errors.password ? " has-error" : ""}`}
+                  type={
+                    showPassword
+                      ? "text"
+                      : "password"
+                  }
+                  className={`admin-login-input${
+                    errors.password
+                      ? " has-error"
+                      : ""
+                  }`}
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => {
+
                     setPassword(e.target.value);
+
                     if (errors.password) {
-                      setErrors((prev) => ({ ...prev, password: "" }));
+                      setErrors((prev) => ({
+                        ...prev,
+                        password: "",
+                      }));
                     }
+
                   }}
                   autoComplete="current-password"
                 />
 
                 {errors.password && (
-                  <p style={styles.errorText}>{errors.password}</p>
+                  <p style={styles.errorText}>
+                    {errors.password}
+                  </p>
                 )}
+
               </div>
+
+
+              {/* KEEP ME SIGNED IN */}
 
               <div style={styles.optionsRow}>
-                <label style={styles.rememberLabel}>
-                  <input
-                    type="checkbox"
-                    className="remember-checkbox"
-                    checked={remember}
-                    onChange={(e) => setRemember(e.target.checked)}
-                  />
-                  Keep me signed in
-                </label>
 
-                <a href="#forgot-password" className="forgot-link">
-                  Forgot password?
-                </a>
+                <div>
+
+                  <label style={styles.rememberLabel}>
+
+                    <input
+                      type="checkbox"
+                      className="remember-checkbox"
+                      checked={remember}
+                      onChange={(e) => {
+
+                        setRemember(e.target.checked);
+
+                        if (e.target.checked) {
+                          setErrors((prev) => ({
+                            ...prev,
+                            remember: "",
+                          }));
+                        }
+
+                      }}
+                    />
+
+                    Keep me signed in
+
+                  </label>
+
+                  {errors.remember && (
+                    <p style={styles.errorText}>
+                      {errors.remember}
+                    </p>
+                  )}
+
+                </div>
+
+                <button
+                      type="button"
+                      className="forgot-link"
+                      onClick={onForgotPassword}
+                      style={{
+                                border: "none",
+                                background: "transparent",
+                                cursor: "pointer",
+                                 padding: 0,
+                              }}
+                  >
+                      Forgot password?
+                </button>
               </div>
+
+
+              {/* LOGIN BUTTON */}
 
               <button
                 type="submit"
@@ -307,30 +479,46 @@ export default function AdminLogin({onLogin,onRegister}) {
                 disabled={submitting}
                 style={{ marginTop: 24 }}
               >
-                {submitting ? "Signing in..." : "Sign in to Admin Portal"}
+                {submitting
+                  ? "Signing in..."
+                  : "Sign in to Admin Portal"}
               </button>
+
             </form>
 
+
+            {/* FOOTER */}
+
             <div style={styles.footer}>
-              <span style={styles.lockIcon}>🔒</span>
+
+              <span style={styles.lockIcon}>
+                🔒
+              </span>
 
               <p style={styles.footerText}>
                 Restricted to authorized personnel. All access is logged and
                 monitored.
               </p>
+
             </div>
+
           </div>
+
         </div>
+
       </main>
 
       <footer style={styles.bottomFooter}>
         Missing Child Rescue Network • Admin Access
       </footer>
+
     </div>
   );
 }
 
+
 const styles = {
+
   page: {
     minHeight: "100vh",
     width: "100%",
@@ -371,12 +559,14 @@ const styles = {
     fontSize: 13,
     boxShadow: "0 4px 10px rgba(229, 37, 41, 0.18)",
   },
+
   logoImage: {
-  width: "100%",
-  height: "100%",
-  objectFit: "contain",
-  borderRadius: 8,
-},
+    width: "100%",
+    height: "100%",
+    objectFit: "contain",
+    borderRadius: 8,
+  },
+
   brandTitle: {
     color: "#e52529",
     fontSize: 16,
@@ -563,7 +753,7 @@ const styles = {
   optionsRow: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     marginTop: 17,
   },
 

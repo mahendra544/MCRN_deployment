@@ -1,7 +1,30 @@
-/*import AdminDashboard from "./AdminDashboard";
+/*import { useState } from "react";
+import AdminLogin from "./AdminLogin_Styled";
+import AdminDashboard from "./AdminDashboard";
 
 function AppAdmin() {
-  return <AdminDashboard />;
+  const [loggedIn, setLoggedIn] = useState(
+    localStorage.getItem("adminLoggedIn") === "true"
+  );
+
+  const handleLogin = () => {
+    setLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("adminLoggedIn");
+    setLoggedIn(false);
+  };
+
+  if (loggedIn) {
+    return (
+      <AdminDashboard onLogout={handleLogout} />
+    );
+  }
+
+  return (
+    <AdminLogin onLogin={handleLogin} />
+  );
 }
 
 export default AppAdmin;
@@ -10,44 +33,65 @@ import AdminLogin from "./AdminLogin_Styled";
 import AdminDashboard from "./AdminDashboard";
 
 function AppAdmin() {
-  const [loggedIn, setLoggedIn] = useState(false);
-
-  return loggedIn ? (
-    <AdminDashboard />
-  ) : (
-    <AdminLogin onLogin={() => setLoggedIn(true)} />
+  const [loggedIn, setLoggedIn] = useState(
+    localStorage.getItem("adminLoggedIn") === "true"
   );
+
+  const handleLogin = () => {
+    localStorage.setItem("adminLoggedIn", "true");
+    setLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("adminLoggedIn");
+    setLoggedIn(false);
+  };
+
+  if (loggedIn) {
+    return <AdminDashboard onLogout={handleLogout} />;
+  }
+
+  return <AdminLogin onLogin={handleLogin} />;
 }
 
 export default AppAdmin;*/
 import { useState } from "react";
-import AdminRegister from "./AdminRegister";
 import AdminLogin from "./AdminLogin_Styled";
 import AdminDashboard from "./AdminDashboard";
+import ForgotPassword from "./ForgotPassword";
 
 function AppAdmin() {
-  const [page, setPage] = useState("register");
   const [loggedIn, setLoggedIn] = useState(false);
 
-  // After successful login → Dashboard
+  const [page, setPage] = useState("login");
+
+  const handleLogin = () => {setLoggedIn(true);};
+
+  const handleLogout = () => {
+    localStorage.removeItem("adminLoggedIn");
+    setLoggedIn(false);
+    setPage("login");
+  };
+
+  // Show Dashboard after login
   if (loggedIn) {
-    return <AdminDashboard />;
+    return <AdminDashboard onLogout={handleLogout} />;
   }
 
-  // Register page
-  if (page === "register") {
+  // Show Forgot Password page
+  if (page === "forgot-password") {
     return (
-      <AdminRegister
-        onRegister={() => setPage("login")}
+      <ForgotPassword
+        onBack={() => setPage("login")}
       />
     );
   }
 
-  // Login page
+  // Show Login page
   return (
     <AdminLogin
-      onLogin={() => setLoggedIn(true)}
-      onRegister={() => setPage("register")}
+      onLogin={handleLogin}
+      onForgotPassword={() => setPage("forgot-password")}
     />
   );
 }
