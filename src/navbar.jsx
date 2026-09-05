@@ -10,19 +10,22 @@ function Navbar() {
 
         {/* =========================
             LOGO
-        ========================= */}
-        <NavLink to="/" className="common-brand">
+            ========================= */}
+          <NavLink to="/" className="common-brand">
 
-          <div className="common-brand-mark">
-            M
-          </div>
+             <div className="common-brand-mark">
+                <img
+                  src="/missing-child-logo.jpeg"
+                 alt="Missing Child Rescue Network"
+                />
+              </div>
+     
+             <div className="common-brand-text">
+                <strong>Missing Child</strong>
+                <span>Rescue Network</span>
+             </div>
 
-          <div className="common-brand-text">
-            <strong>Missing Child</strong>
-            <span>Rescue Network</span>
-          </div>
-
-        </NavLink>
+          </NavLink>
 
 
         {/* =========================
