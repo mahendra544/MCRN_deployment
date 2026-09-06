@@ -2,50 +2,50 @@
    17. RESPONSIVE — TABLET
    ===================================================== */
 
-@media (max-width: 1050px) {
-  .nav-links {
-    gap: 0;
-  }
+  @media (max-width: 1050px) {
+      .nav-links {
+       gap: 0;
+      }
 
-  .nav-link {
-    padding-inline: 10px;
-  }
+      .nav-link {
+      padding-inline: 10px;
+      }
 
-  .module-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+      .module-grid {
+      grid-template-columns: repeat(2, 1fr);
+      }
 
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+      .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+      }
 
-  .stat:nth-child(2) {
-    border-right: 0;
-  }
+     .stat:nth-child(2) {
+     border-right: 0;
+     }
 
-  .stat:nth-child(-n+2) {
-    border-bottom: 1px solid rgba(255,255,255,.18);
-  }
+     .stat:nth-child(-n+2) {
+     border-bottom: 1px solid rgba(255,255,255,.18);
+     }
 
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
+     .dashboard-grid {
+      grid-template-columns: 1fr;
+     }
 
-  .search-panel {
-    grid-template-columns: repeat(2, 1fr);
-  }
+      .search-panel {
+       grid-template-columns: repeat(2, 1fr);
+      }
 
-  .search-panel .btn {
-    width: 100%;
+       .search-panel .btn {
+       width: 100%;
+      }
   }
-}
 
 
 /* =====================================================
    18. RESPONSIVE — MOBILE
    ===================================================== */
 
-@media (max-width: 760px) {
+    @media (max-width: 760px) {
   :root {
     --header-height: 68px;
   }
@@ -176,7 +176,7 @@
   .footer-bottom {
     flex-direction: column;
   }
-}
+    }
 
 
 /* =====================================================
