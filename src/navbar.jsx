@@ -10,22 +10,19 @@ function Navbar() {
 
         {/* =========================
             LOGO
-            ========================= */}
-          <NavLink to="/" className="common-brand">
+        ========================= */}
+        <NavLink to="/" className="common-brand">
 
-             <div className="common-brand-mark">
-                <img
-                  src="/missing-child-logo.jpeg"
-                 alt="Missing Child Rescue Network"
-                />
-              </div>
-     
-             <div className="common-brand-text">
-                <strong>Missing Child</strong>
-                <span>Rescue Network</span>
-             </div>
+          <div className="common-brand-mark">
+            M
+          </div>
 
-          </NavLink>
+          <div className="common-brand-text">
+            <strong>Missing Child</strong>
+            <span>Rescue Network</span>
+          </div>
+
+        </NavLink>
 
 
         {/* =========================
@@ -42,7 +39,7 @@ function Navbar() {
             }
           >
             <span className="common-nav-icon">⌂</span>
-            Dashboard
+            Home
           </NavLink>
 
 
@@ -94,7 +91,7 @@ function Navbar() {
             }
           >
             <span className="common-nav-icon">▤</span>
-            My Reports
+            About Us
           </NavLink>
 
         </nav>
@@ -111,7 +108,7 @@ function Navbar() {
             className="common-notification"
             aria-label="Notifications"
           >
-            <span>♢</span>
+            <span>🔔</span>
             <i>3</i>
           </NavLink>
 

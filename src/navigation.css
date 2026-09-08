@@ -59,21 +59,22 @@
 /* Logo */
 
 .common-brand-mark {
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
+  width: 43px;
+  height: 43px;
 
-.common-brand-mark img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+  display: grid;
+  place-items: center;
+
+  border-radius: 13px;
+
+  color: #fff;
+  background: #e02323;
+
+  font-size: 1.15rem;
+  font-weight: 900;
+
+  box-shadow:
+    0 8px 20px rgba(224, 35, 35, 0.2);
 }
 
 
@@ -365,7 +366,7 @@
    ========================================================= */
 
 .common-page-content {
-  padding-top: 85px;
+  padding-top: 76px;
 }
 
 
@@ -469,39 +470,4 @@
     height: 37px;
   }
 
-}
-header {
-    animation: fadeInDown 0.4s ease both;
-}
-
-@keyframes fadeInDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-nav a {
-    position: relative;
-    transition: color 0.2s ease;
-}
-
-nav a::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    bottom: -4px;
-    width: 0;
-    height: 2px;
-    background: #e02323;
-    transition: width 0.25s ease;
-}
-
-nav a:hover::after,
-nav a.active::after {
-    width: 100%;
 }
