@@ -2,6 +2,10 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  font-size:15px;
+  font-family: "Poppins", sans-serif;
+  font-weight:400;
+
 }
 
 :root {
@@ -130,12 +134,12 @@ button {
   font-size: 13px;
   color: rgba(255, 255, 255, 0.75);
 }
-logoImage: {
+logoImage {
   width: "100%",
   height: "100%",
   objectFit: "contain",
   borderRadius: 8,
-},
+}
 
 .portal-title {
   padding: 24px 24px 10px;
@@ -468,7 +472,7 @@ logoImage: {
 .date-card {
   background: white;
 
-  border: 1px solid var(--border);
+  border: #e02323;
 
   padding: 16px 22px;
 
@@ -508,12 +512,11 @@ logoImage: {
 }
 
 .stat-card {
-  border: 1px solid var(--border);
-
-  background: white;
+  background: #FFF1F1;
+  border: 1px solid #F7B7B7;
 
   border-radius: 10px;
-
+  border-color:#e02323;
   padding: 17px;
 
   text-align: left;
@@ -1360,7 +1363,492 @@ logoImage: {
     width: 90vw;
     right: -50px;
   }
+  
+
+.dashboard-content {
+  animation: fadeIn 0.8s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
 
 
 
 
+.welcome-section {
+  animation: welcomeSlide 0.8s ease-out;
+}
+
+@keyframes welcomeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stat-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.stat-card:hover {
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+}
+
+
+.dashboard-grid .dashboard-card:first-child {
+  animation: slideFromLeft 0.8s ease forwards;
+}
+
+@keyframes slideFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+
+
+
+.dashboard-grid .dashboard-card:last-child {
+  animation: slideFromRight 0.8s ease forwards;
+}
+
+@keyframes slideFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+
+
+
+.quick-actions button {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.quick-actions button:hover {
+  transform: translateX(8px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.12);
+}
+
+
+
+   
+
+.date-card {
+  animation: dateFloat 2.5s ease-in-out infinite;
+}
+
+@keyframes dateFloat {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+.wave {
+  display: inline-block;
+  animation: waveHand 1.5s infinite;
+  transform-origin: 70% 70%;
+}
+
+@keyframes waveHand {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  20% {
+    transform: rotate(15deg);
+  }
+
+  40% {
+    transform: rotate(-10deg);
+  }
+
+  60% {
+    transform: rotate(15deg);
+  }
+
+  80% {
+    transform: rotate(-5deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    cursor: pointer;
+
+    animation: floating 3s ease-in-out infinite;
+    transition: transform .3s ease, box-shadow .3s ease;
+}
+@keyframes floating {
+    0% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0px);
+    }
+}
+.stat-card:hover {
+    transform: translateY(-15px) scale(1.05);
+    box-shadow: 0 15px 30px rgba(0,0,0,.2);
+}
+
+
+.stat-card .stat-content .stat-number {
+    font-size: 36px !important;
+    color: #E02323 !important;
+    font-weight: 700 !important;
+}
+/*body 
+    font-family: "Poppins", sans-serif;
+    background: #f5f7fb;
+    color: #1f2937;
+
+.admin-layout{
+    display:flex;
+    min-height:100vh;
+    background:#f5f7fb;
+}
+.admin-sidebar{
+    width:270px;
+    min-width:270px;
+    height:100vh;
+    position:fixed;
+    left:0;
+    top:0;
+    overflow-y:auto;
+}
+.admin-content{
+    margin-left:270px;
+    width:calc(100% - 270px);
+    min-height:100vh;
+}
+.admin-main{
+    padding:30px;
+    background:#f5f7fb;
+}
+.admin-logo{
+
+    height:90px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+    padding:25px;
+
+    border-bottom:1px solid rgba(255,255,255,.2);
+}
+
+.logo-box{
+
+    width:50px;
+    height:50px;
+
+    border-radius:12px;
+
+    background:white;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+}
+.logo-box img{
+    width:40px;
+    height:40px;
+    object-fit:contain;
+}
+.admin-logo h2{
+
+    color:white;
+
+    font-size:21px;
+
+    font-weight:700;
+
+    letter-spacing:1px;
+}
+.sidebar-menu{
+
+    padding:18px;
+}
+.sidebar-image{
+    width:100%;
+    max-width:170px;
+    display:block;
+    margin:20px auto;
+}
+.sidebar-item{
+
+    width:100%;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:14px;
+
+    padding:14px 18px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:transparent;
+
+    color:white;
+
+    font-size:15px;
+
+    font-weight:500;
+
+    transition:.3s;
+
+    cursor:pointer;
+
+    margin-bottom:8px;
+}
+
+.sidebar-item:hover{
+
+    background:white;
+
+    color:#d32f2f;
+
+    transform:translateX(8px);
+}
+
+.sidebar-item.active{
+
+    background:white;
+
+    color:#d32f2f;
+
+    font-weight:700;
+
+    box-shadow:0 6px 15px rgba(0,0,0,.15);
+}
+.sidebar-bottom{
+
+    margin-top:auto;
+
+    padding:20px;
+
+    border-top:1px solid rgba(255,255,255,.2);
+}
+
+.admin-profile{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+}
+
+.profile-avatar{
+
+    width:45px;
+
+    height:45px;
+
+    border-radius:50%;
+
+    background:white;
+
+    color:#d32f2f;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-weight:700;
+}
+.logout-button{
+
+    width:100%;
+
+    margin-top:18px;
+
+    border:none;
+
+    border-radius:10px;
+
+    padding:12px;
+
+    background:white;
+
+    color:#d32f2f;
+
+    font-weight:600;
+
+    transition:.3s;
+}
+
+.logout-button:hover{
+
+    background:#ffeaea;
+
+    transform:translateY(-2px);
+}
+.admin-header{
+    height:75px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 30px;
+    background:white;
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
+}
+.header-search{
+    width:380px;
+    height:45px;
+}
+
+.header-search input{
+
+    border:none;
+
+    outline:none;
+
+    background:transparent;
+
+    width:100%;
+
+    font-size:15px;
+}
+.header-right{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:25px;
+}
+.notification-button{
+
+    position:relative;
+
+    border:none;
+
+    background:white;
+
+    font-size:23px;
+
+    cursor:pointer;
+}
+
+.notification-count{
+
+    position:absolute;
+
+    top:-6px;
+
+    right:-8px;
+
+    width:20px;
+
+    height:20px;
+
+    border-radius:50%;
+
+    background:red;
+
+    color:white;
+
+    font-size:11px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+}
+.header-admin{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+}
+
+.header-admin strong{
+
+    font-size:16px;
+
+    font-weight:600;
+}
+
+.header-admin span{
+
+    font-size:13px;
+
+    color:#6b7280;
+}
+.admin-main{
+
+    padding:30px;
+
+    background:#f5f7fb;
+
+    min-height:calc(100vh - 75px);
+}
+*{
+
+    transition:.3s;
+}
+
+button:hover{
+
+    cursor:pointer;
+}*/

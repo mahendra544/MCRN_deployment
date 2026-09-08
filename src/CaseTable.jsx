@@ -40,3 +40,4 @@ function CaseTable({ cases }) {
 }
 
 export default CaseTable;
+

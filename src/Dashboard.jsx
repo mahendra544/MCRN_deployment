@@ -64,7 +64,9 @@ function Dashboard() {
       <div className="welcome-section">
         <div>
           <span className="section-label">ADMIN CONTROL CENTER</span>
-          <h1>Welcome back, Admin 👋</h1>
+          <h1>
+  Welcome back, Admin <span className="wave">👋</span>
+</h1>
           <p>Monitor cases, verify reports and coordinate rescue operations.</p>
         </div>
 
@@ -76,12 +78,12 @@ function Dashboard() {
       </div>
 
       <div className="stats-grid">
-        <StatCard title="Total Missing Cases" value="120" icon="📁" type="blue" />
-        <StatCard title="Pending Verification" value="13" icon="⏳" type="orange" />
-        <StatCard title="Active Cases" value="45" icon="🔎" type="purple" />
-        <StatCard title="Rescued Children" value="62" icon="✓" type="green" />
-        <StatCard title="Registered Police" value="25" icon="👮" type="red" />
-        <StatCard title="Registered Users" value="850" icon="👤" type="cyan" />
+        <StatCard title="Total Missing Cases" value={120} icon="📁" type="blue" />
+<StatCard title="Pending Verification" value={13} icon="⏳" type="orange" />
+<StatCard title="Active Cases" value={45} icon="🔎" type="purple" />
+<StatCard title="Rescued Children" value={62} icon="✓" type="green" />
+<StatCard title="Registered Police" value={25} icon="👮" type="red" />
+<StatCard title="Registered Users" value={850} icon="👤" type="cyan" />
       </div>
 
       <div className="dashboard-grid">

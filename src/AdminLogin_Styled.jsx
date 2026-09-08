@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-
+import SecurityVerification from "./SecurityVerification";
 export default function AdminLogin({onLogin,onForgotPassword}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -7,7 +7,7 @@ export default function AdminLogin({onLogin,onForgotPassword}) {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
-
+const [showVerification, setShowVerification] = useState(false);
   const validate = () => {
     const next = {};
 
@@ -69,13 +69,12 @@ export default function AdminLogin({onLogin,onForgotPassword}) {
       }
 
       // Login successful
-      // This happens ONLY if checkbox is checked
-      localStorage.setItem("adminLoggedIn", "true");
+localStorage.setItem("adminLoggedIn", "true");
 
-      setSubmitting(false);
+setSubmitting(false);
 
-      // Open Admin Portal
-      onLogin();
+// Show Security Verification page
+setShowVerification(true);
 
     } catch (error) {
       console.error("Login error:", error);
@@ -87,9 +86,18 @@ export default function AdminLogin({onLogin,onForgotPassword}) {
       setSubmitting(false);
     }
   };
-
+if (showVerification) {
+    return (
+        <SecurityVerification
+            adminName="Administrator"
+            role="Super Administrator"
+            securityLevel="Level 5"
+            onVerified={() => onLogin()}
+        />
+    );
+}
   return (
-    <div style={styles.page}>
+    <div style={styles.page} className="login-page-animation">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
@@ -201,9 +209,89 @@ export default function AdminLogin({onLogin,onForgotPassword}) {
             padding: 16px !important;
           }
         }
-      `}</style>
 
-      <div style={styles.topBar}>
+  /* ================= LOGIN PAGE ANIMATIONS ================= */
+
+  .login-page-animation {
+    animation: pageFadeIn 0.7s ease-in-out;
+  }
+
+  .topbar-animation {
+    animation: topSlideDown 0.7s ease-out;
+  }
+
+  .login-card-animation {
+    opacity: 0;
+    animation: cardSlideUp 0.8s ease-out forwards;
+  }
+
+  .side-panel-animation {
+    animation: panelSlideLeft 0.9s ease-out;
+  }
+
+  .form-area-animation {
+    opacity: 0;
+    animation: formSlideRight 0.9s ease-out forwards;
+    animation-delay: 0.3s;
+  }
+
+  @keyframes pageFadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes topSlideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes cardSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(45px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes panelSlideLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-50px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes formSlideRight {
+    from {
+      opacity: 0;
+      transform: translateX(50px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+`}
+      </style>
+
+      <div style={styles.topBar} className="topbar-animation">
         <div style={styles.brand}>
 
           <div style={styles.logo}>
@@ -238,11 +326,11 @@ export default function AdminLogin({onLogin,onForgotPassword}) {
       >
 
         <div
-          className="admin-login-card"
-          style={styles.card}
-        >
+  className="admin-login-card login-card-animation"
+  style={styles.card}
+>
 
-          <div style={styles.sidePanel}>
+          <div style={styles.sidePanel} className="side-panel-animation">
 
             <div style={styles.sideIcon}>
               🛡️
@@ -282,7 +370,7 @@ export default function AdminLogin({onLogin,onForgotPassword}) {
 
           </div>
 
-          <div style={styles.formArea}>
+          <div style={styles.formArea} className="form-area-animation">
 
             <div style={styles.statusRow}>
               <span style={styles.statusDot}></span>
@@ -794,4 +882,4 @@ const styles = {
     color: "#98a2b3",
     fontSize: 10.5,
   },
-};
+}
