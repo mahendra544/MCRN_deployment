@@ -14,7 +14,7 @@ function Navbar() {
         <NavLink to="/" className="common-brand">
 
           <div className="common-brand-mark">
-            M
+            <img src="missing-child-logo.jpeg"></img>
           </div>
 
           <div className="common-brand-text">
