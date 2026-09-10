@@ -1,0 +1,39 @@
+.notification-list {
+  padding: 0 18px 18px;
+}
+
+.notification-item {
+  display: flex;
+  gap: 12px;
+  padding: 13px 4px;
+  border-top: 1px solid #edf0f3;
+}
+
+.notification-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 10px;
+  color: #e02323;
+  background: #fff1f1;
+  font-weight: 800;
+}
+
+.notification-item strong {
+  display: block;
+  font-size: 0.78rem;
+}
+
+.notification-item p {
+  margin: 3px 0;
+  color: #7d8590;
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+.notification-item span {
+  color: #a0a6ae;
+  font-size: 0.62rem;
+}
