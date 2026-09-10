@@ -36,8 +36,7 @@ function PoliceDashboard() {
 
   const location = useLocation();
 
-  const [cases, setCases] =
-    useState(mockCases);
+  const [cases, setCases] = useState(mockCases);
 
   const [filters, setFilters] =
     useState(EMPTY_FILTERS);
@@ -51,9 +50,9 @@ function PoliceDashboard() {
     useState("assigned");
 
 
-  /* =========================================
+  /* =====================================================
      FILTER CASES
-  ========================================== */
+     ===================================================== */
 
   const filteredCases = useMemo(() => {
 
@@ -65,19 +64,19 @@ function PoliceDashboard() {
       const locationName =
         item.last_seen_location?.toLowerCase() || "";
 
-      return (
-        name.includes(
-          filters.name.toLowerCase()
-        ) &&
+      const searchName =
+        filters.name.toLowerCase();
 
+      const searchLocation =
+        filters.location.toLowerCase();
+
+      return (
+        name.includes(searchName) &&
         (
           !filters.stage ||
           item.case_stage === filters.stage
         ) &&
-
-        locationName.includes(
-          filters.location.toLowerCase()
-        )
+        locationName.includes(searchLocation)
       );
 
     });
@@ -85,9 +84,9 @@ function PoliceDashboard() {
   }, [cases, filters]);
 
 
-  /* =========================================
+  /* =====================================================
      SELECTED CASE
-  ========================================== */
+     ===================================================== */
 
   const selectedCase =
     cases.find(
@@ -96,9 +95,9 @@ function PoliceDashboard() {
     ) || null;
 
 
-  /* =========================================
+  /* =====================================================
      CASE COUNTS
-  ========================================== */
+     ===================================================== */
 
   const stageCounts = useMemo(() => {
 
@@ -123,14 +122,11 @@ function PoliceDashboard() {
   }, [cases]);
 
 
-  /* =========================================
+  /* =====================================================
      UPDATE CASE STAGE
-  ========================================== */
+     ===================================================== */
 
-  function advanceStage(
-    caseId,
-    newStage
-  ) {
+  function advanceStage(caseId, newStage) {
 
     setCases((current) =>
 
@@ -150,9 +146,9 @@ function PoliceDashboard() {
   }
 
 
-  /* =========================================
+  /* =====================================================
      MARK CASE AS FOUND
-  ========================================== */
+     ===================================================== */
 
   function markFound(caseId) {
 
@@ -164,18 +160,9 @@ function PoliceDashboard() {
   }
 
 
-  /* =========================================
+  /* =====================================================
      DASHBOARD NAVIGATION
-     
-     When navbar changes URL:
-     
-     /police-dashboard
-     /police-cases#all-cases
-     /police-verify#verify-reports
-     /police-search#search-records
-     /police-notifications#notifications
-     /police-profile#profile-section
-  ========================================== */
+     ===================================================== */
 
   useEffect(() => {
 
@@ -183,61 +170,58 @@ function PoliceDashboard() {
       location.hash.replace("#", "");
 
     /*
-     * Verify Reports needs the
-     * sightings tab to be visible
-     * before we scroll to it.
+     * When Verify Reports is selected,
+     * display the Sighting Reports tab.
      */
+
     if (hash === "verify-reports") {
 
       setActiveTab("sightings");
 
     } else {
 
-      /*
-       * Cases and notifications
-       * are inside Assigned Cases.
-       */
       setActiveTab("assigned");
 
     }
 
 
     /*
-     * Wait until React renders
-     * the correct tab.
+     * Wait for React to render the
+     * correct section before scrolling.
      */
-    const timer =
-      setTimeout(() => {
 
-        if (!hash) {
+    const timer = setTimeout(() => {
 
-          window.scrollTo({
-            top: 0,
-            behavior: "smooth",
-          });
+      if (!hash) {
 
-          return;
-        }
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
 
-
-        const element =
-          document.getElementById(hash);
+        return;
+      }
 
 
-        if (element) {
-
-          element.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-
-        }
-
-      }, 150);
+      const element =
+        document.getElementById(hash);
 
 
-    return () =>
+      if (element) {
+
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+
+      }
+
+    }, 150);
+
+
+    return () => {
       clearTimeout(timer);
+    };
 
   }, [
     location.pathname,
@@ -248,18 +232,18 @@ function PoliceDashboard() {
   return (
     <div className="police-dashboard-shell">
 
-      {/* =====================================
+      {/* =================================================
           NAVBAR
-      ====================================== */}
+          ================================================= */}
 
       <PoliceNavbar />
 
 
       <main className="police-dashboard-page">
 
-        {/* =====================================
-            HERO / DASHBOARD
-        ====================================== */}
+        {/* =================================================
+            HERO
+            ================================================= */}
 
         <section
           id="dashboard"
@@ -291,7 +275,9 @@ function PoliceDashboard() {
           </div>
 
 
-          {/* PROFILE SECTION */}
+          {/* =================================================
+              OFFICER PROFILE
+              ================================================= */}
 
           <div
             id="profile-section"
@@ -327,19 +313,19 @@ function PoliceDashboard() {
         </section>
 
 
-        {/* =====================================
+        {/* =================================================
             STATISTICS
-        ====================================== */}
+            ================================================= */}
 
         <section className="pd-stats-row">
 
-          {/* OPEN */}
+          {/* ================= OPEN CASES ================= */}
 
           <div className="pd-stat pd-stat--open">
 
-            <span className="pd-stat-icon">
+            <div className="pd-stat-icon">
               !
-            </span>
+            </div>
 
             <div>
 
@@ -356,13 +342,13 @@ function PoliceDashboard() {
           </div>
 
 
-          {/* INVESTIGATING */}
+          {/* ============== INVESTIGATING ================ */}
 
           <div className="pd-stat pd-stat--investigating">
 
-            <span className="pd-stat-icon">
+            <div className="pd-stat-icon">
               ↗
-            </span>
+            </div>
 
             <div>
 
@@ -379,13 +365,13 @@ function PoliceDashboard() {
           </div>
 
 
-          {/* MATCHED */}
+          {/* ================= MATCHED ================== */}
 
           <div className="pd-stat pd-stat--matched">
 
-            <span className="pd-stat-icon">
+            <div className="pd-stat-icon">
               ✓
-            </span>
+            </div>
 
             <div>
 
@@ -402,21 +388,19 @@ function PoliceDashboard() {
           </div>
 
 
-          {/* RESOLVED */}
+          {/* ================= RESOLVED ================= */}
 
           <div className="pd-stat pd-stat--resolved">
 
-            <span className="pd-stat-icon">
+            <div className="pd-stat-icon">
               ★
-            </span>
+            </div>
 
             <div>
 
               <span className="pd-stat-number">
-                {
-                  stageCounts.Resolved +
-                  stageCounts.Closed
-                }
+                {stageCounts.Resolved +
+                  stageCounts.Closed}
               </span>
 
               <span className="pd-stat-label">
@@ -430,9 +414,9 @@ function PoliceDashboard() {
         </section>
 
 
-        {/* =====================================
+        {/* =================================================
             SEARCH RECORDS
-        ====================================== */}
+            ================================================= */}
 
         <section
           id="search-records"
@@ -450,30 +434,71 @@ function PoliceDashboard() {
         </section>
 
 
-        {/* =====================================
+        {/* =================================================
             TABS
-        ====================================== */}
+            ================================================= */}
 
         <section className="pd-tabs-wrap">
 
           <div className="pd-tabs">
-           <button type="button" className={`pd-tab ${ activeTab === "assigned" ? "active" : "" }`}
-                onClick={() => setActiveTab("assigned")} >
-           <span>Assigned Cases</span>
-           <span className="tab-count"> {filteredCases.length} </span>
+
+            {/* ASSIGNED CASES */}
+
+            <button
+              type="button"
+              className={
+                `pd-tab ${
+                  activeTab === "assigned"
+                    ? "active"
+                    : ""
+                }`
+              }
+              onClick={() =>
+                setActiveTab("assigned")
+              }
+            >
+
+              <span>
+                Assigned Cases
+              </span>
+
+              <span className="tab-count">
+                {filteredCases.length}
+              </span>
+
             </button>
 
-           <button type="button" className={`pd-tab ${ activeTab === "sightings" ? "active" : ""}`}
-            onClick={() => setActiveTab("sightings")} >
-            <span>Sighting Reports</span>
-          </button>
-        </div>
+
+            {/* SIGHTING REPORTS */}
+
+            <button
+              type="button"
+              className={
+                `pd-tab ${
+                  activeTab === "sightings"
+                    ? "active"
+                    : ""
+                }`
+              }
+              onClick={() =>
+                setActiveTab("sightings")
+              }
+            >
+
+              <span>
+                Sighting Reports
+              </span>
+
+            </button>
+
+          </div>
+
         </section>
 
 
-        {/* =====================================
+        {/* =================================================
             ASSIGNED CASES
-        ====================================== */}
+            ================================================= */}
 
         {activeTab === "assigned" && (
 
@@ -482,7 +507,7 @@ function PoliceDashboard() {
             className="dashboard-grid"
           >
 
-            {/* CASE LIST */}
+            {/* ================= CASE LIST ================= */}
 
             <CaseList
               cases={filteredCases}
@@ -495,11 +520,11 @@ function PoliceDashboard() {
             />
 
 
-            {/* RIGHT COLUMN */}
+            {/* ================= RIGHT COLUMN ============= */}
 
             <div className="pd-right-column">
 
-              {/* CASE DETAILS */}
+              {/* ================= CASE DETAILS ============ */}
 
               <CaseDetailPanel
                 caseItem={selectedCase}
@@ -512,9 +537,7 @@ function PoliceDashboard() {
               />
 
 
-              {/* =================================
-                  NOTIFICATIONS
-              ================================== */}
+              {/* ================= NOTIFICATIONS =========== */}
 
               <div id="notifications">
 
@@ -533,9 +556,9 @@ function PoliceDashboard() {
         )}
 
 
-        {/* =====================================
-            VERIFY REPORTS
-        ====================================== */}
+        {/* =================================================
+            VERIFY / SIGHTING REPORTS
+            ================================================= */}
 
         {activeTab === "sightings" && (
 
@@ -587,9 +610,9 @@ function PoliceDashboard() {
       </main>
 
 
-      {/* =====================================
+      {/* =================================================
           FOOTER
-      ====================================== */}
+          ================================================= */}
 
       <footer className="police-footer">
 

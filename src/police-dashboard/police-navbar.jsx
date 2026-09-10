@@ -126,7 +126,7 @@ function PoliceNavbar() {
           className="pd-brand"
         >
           <div className="pd-brand-mark">
-            M
+            <img src="missing-child-logo.jpeg"></img>
           </div>
 
           <div className="pd-brand-text">
