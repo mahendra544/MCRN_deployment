@@ -46,17 +46,59 @@ function ReportMissingChild() {
     }
   }
 
-  function handleSubmit(event) {
-    event.preventDefault();
+  async function handleSubmit(event) {
+  event.preventDefault();
 
-    // For now this only demonstrates that the form is working.
-    // Later, replace this section with fetch() to send the data
-    // to your backend/database.
-    console.log("Missing Child Report:", formData);
+  try {
+    const data = new FormData();
+
+    // Child details
+    data.append("child_name", formData.childName);
+    data.append("age", formData.age);
+    data.append("gender", formData.gender);
+
+    // Last seen details
+    data.append("last_seen_location", formData.lastSeenLocation);
+    data.append("date_missing", formData.lastSeenDate);
+    data.append("time_missing", formData.lastSeenTime);
+
+    // Child description
+    data.append("identifying_marks", formData.identificationMarks);
+    data.append("clothing_description", formData.clothing);
+    data.append("additional_information", formData.description);
+
+    // Parent / guardian details
+    data.append("parent_name", formData.reporterName);
+    data.append("parent_phone", formData.phone);
+    data.append("parent_email", formData.email);
+    data.append("address", formData.address);
+
+    // Photo
+    if (formData.photo) {
+      data.append("photo", formData.photo);
+    }
+
+    const response = await fetch("http://localhost:5000/api/report-child", {     
+      method: "POST",
+      body: data
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to submit report");
+    }
+
+    console.log("Report submitted:", result);
 
     setSubmitted(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
+
+  } catch (error) {
+    console.error("Error submitting report:", error);
+    alert("Failed to submit the report. Please try again.");
   }
+}
 
   function handleReset() {
     setFormData(initialForm);
