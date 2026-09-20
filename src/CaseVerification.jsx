@@ -1,57 +1,227 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 function CaseVerification() {
-  const cases = [
-    { id: "MCN-006", child: "Pooja", age: 7, gender: "Female", location: "Nellore", date: "21 Aug 2026", priority: "High", status: "Pending" },
-    { id: "MCN-007", child: "Ravi", age: 11, gender: "Male", location: "Vizag", date: "21 Aug 2026", priority: "Medium", status: "Pending" },
-    { id: "MCN-008", child: "Meena", age: 9, gender: "Female", location: "Guntur", date: "20 Aug 2026", priority: "High", status: "Pending" }
-  ];
+  const [cases, setCases] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch pending cases from backend
+  const fetchCases = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/admin/cases/pending"
+      );
+
+      const data = await response.json();
+
+      setCases(data);
+    } catch (error) {
+      console.error("Error fetching pending cases:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load cases when page opens
+  useEffect(() => {
+    fetchCases();
+  }, []);
+
+  // Verify case
+  const handleVerify = async (id) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/admin/cases/${id}/verify`,
+        {
+          method: "PUT",
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(data.message);
+
+        // Remove verified case from pending list
+        setCases((prevCases) =>
+          prevCases.filter((item) => item.id !== id)
+        );
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      console.error("Error verifying case:", error);
+      alert("Failed to verify case");
+    }
+  };
+
+  // Reject case
+  const handleReject = async (id) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/admin/cases/${id}/reject`,
+        {
+          method: "PUT",
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(data.message);
+
+        // Remove rejected case from pending list
+        setCases((prevCases) =>
+          prevCases.filter((item) => item.id !== id)
+        );
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      console.error("Error rejecting case:", error);
+      alert("Failed to reject case");
+    }
+  };
+
+  // Change priority
+  const handlePriorityChange = async (id, priority) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/admin/cases/${id}/priority`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            priority: priority,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Update priority on screen
+        setCases((prevCases) =>
+          prevCases.map((item) =>
+            item.id === id
+              ? { ...item, priority: priority }
+              : item
+          )
+        );
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      console.error("Error updating priority:", error);
+      alert("Failed to update priority");
+    }
+  };
 
   return (
     <div>
       <div className="page-title">
         <div>
           <span className="section-label">CASE MANAGEMENT</span>
+
           <h1>Case Verification</h1>
-          <p>Review and verify missing child reports submitted by users.</p>
+
+          <p>
+            Review and verify missing child reports submitted by users.
+          </p>
         </div>
-        <div className="pending-number">3 Pending</div>
+
+        <div className="pending-number">
+          {cases.length} Pending
+        </div>
       </div>
 
       <div className="dashboard-card">
         <div className="table-container">
-          <table className="case-table">
-            <thead>
-              <tr>
-                <th>Case ID</th>
-                <th>Child</th>
-                <th>Age</th>
-                <th>Gender</th>
-                <th>Location</th>
-                <th>Priority</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cases.map((item) => (
-                <tr key={item.id}>
-                  <td><strong>{item.id}</strong></td>
-                  <td>{item.child}</td>
-                  <td>{item.age}</td>
-                  <td>{item.gender}</td>
-                  <td>{item.location}</td>
-                  <td>
-                    <span className={`priority ${item.priority.toLowerCase()}`}>
-                      {item.priority}
-                    </span>
-                  </td>
-                  <td><span className="pending-status">Pending</span></td>
-                  <td><button className="verify-button">Review</button></td>
+          {loading ? (
+            <p style={{ padding: "20px" }}>
+              Loading pending cases...
+            </p>
+          ) : cases.length === 0 ? (
+            <p style={{ padding: "20px" }}>
+              No pending cases found.
+            </p>
+          ) : (
+            <table className="case-table">
+              <thead>
+                <tr>
+                  <th>Case ID</th>
+                  <th>Child</th>
+                  <th>Age</th>
+                  <th>Gender</th>
+                  <th>Location</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody>
+                {cases.map((item) => (
+                  <tr key={item.id}>
+                    <td>
+                      <strong>{item.case_id}</strong>
+                    </td>
+
+                    <td>{item.child_name}</td>
+
+                    <td>{item.age}</td>
+
+                    <td>{item.gender}</td>
+
+                    <td>{item.location}</td>
+
+                    <td>
+                      <select
+                        value={item.priority}
+                        onChange={(e) =>
+                          handlePriorityChange(
+                            item.id,
+                            e.target.value
+                          )
+                        }
+                      >
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                      </select>
+                    </td>
+
+                    <td>
+                      <span className="pending-status">
+                        Pending Verification
+                      </span>
+                    </td>
+
+                    <td>
+                      <button
+                        className="verify-button"
+                        onClick={() =>
+                          handleVerify(item.id)
+                        }
+                      >
+                        Verify
+                      </button>
+
+                      <button
+                        className="reject-button"
+                        onClick={() =>
+                          handleReject(item.id)
+                        }
+                      >
+                        Reject
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>
