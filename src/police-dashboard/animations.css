@@ -4,13 +4,13 @@
 
 
 /* =====================================================
-   1. PAGE FADE + SLIDE UP
+   1. STAGGERED PAGE ENTRANCE
    ===================================================== */
 
 @keyframes fadeUp {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(14px);
   }
 
   to {
@@ -23,57 +23,80 @@
   animation: fadeUp 0.5s ease both;
 }
 
-
-/* =====================================================
-   2. STAGGERED DASHBOARD ENTRANCE
-   ===================================================== */
-
 .police-dashboard-page > *:nth-child(1) {
   animation-delay: 0.02s;
 }
 
 .police-dashboard-page > *:nth-child(2) {
-  animation-delay: 0.07s;
+  animation-delay: 0.08s;
 }
 
 .police-dashboard-page > *:nth-child(3) {
-  animation-delay: 0.12s;
+  animation-delay: 0.14s;
 }
 
 .police-dashboard-page > *:nth-child(4) {
-  animation-delay: 0.17s;
+  animation-delay: 0.2s;
 }
 
 .police-dashboard-page > *:nth-child(5) {
-  animation-delay: 0.22s;
+  animation-delay: 0.26s;
 }
 
 .police-dashboard-page > *:nth-child(6) {
-  animation-delay: 0.27s;
+  animation-delay: 0.32s;
 }
 
 
 /* =====================================================
-   3. CARD HOVER
+   2. STAT CARDS — individually staggered
+   ===================================================== */
+
+@keyframes statIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.pd-stat {
+  animation: statIn 0.4s ease both;
+}
+
+.pd-stats-row .pd-stat:nth-child(1) {
+  animation-delay: 0.16s;
+}
+
+.pd-stats-row .pd-stat:nth-child(2) {
+  animation-delay: 0.22s;
+}
+
+.pd-stats-row .pd-stat:nth-child(3) {
+  animation-delay: 0.28s;
+}
+
+.pd-stats-row .pd-stat:nth-child(4) {
+  animation-delay: 0.34s;
+}
+
+
+/* =====================================================
+   3. CARD / ROW / PANEL HOVER
    ===================================================== */
 
 .case-row,
 .pd-stat,
 .panel {
   transition:
-    transform 0.22s ease,
-    box-shadow 0.22s ease,
-    border-color 0.22s ease;
-}
-
-.case-row:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(20, 30, 50, 0.08);
-}
-
-.pd-stat:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(20, 30, 50, 0.08);
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
 }
 
 
@@ -99,21 +122,16 @@
 
 
 /* =====================================================
-   5. SEARCH ICON FOCUS
+   5. SEARCH INPUT FOCUS
    ===================================================== */
 
 .search-input-wrapper {
-  transition: transform 0.18s ease;
+  transition: transform 0.16s ease;
 }
 
 .search-input-wrapper:focus-within {
   transform: translateY(-1px);
 }
-
-
-/* =====================================================
-   6. SEARCH ICON
-   ===================================================== */
 
 .search-input-icon {
   transition:
@@ -127,77 +145,45 @@
 
 
 /* =====================================================
-   7. BUTTON ANIMATION
+   6. BUTTONS
    ===================================================== */
 
 .btn {
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
-    background 0.18s ease;
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
 }
 
-.btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 12px rgba(20, 30, 50, 0.10);
+.btn-secondary:hover,
+.btn-ghost:hover {
+  transform: translateY(-1px);
 }
 
 .btn:active {
   transform: translateY(0) scale(0.97);
-  box-shadow: none;
 }
 
 
 /* =====================================================
-   8. TAB ANIMATION
+   7. TABS
    ===================================================== */
 
 .pd-tab {
+  transition: color 0.18s ease;
+}
+
+.pd-tab::after {
+  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.pd-tab .tab-count {
   transition:
+    transform 0.2s ease,
     background 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.pd-tab:hover {
-  transform: translateY(-1px);
-}
-
-.pd-tab:active {
-  transform: scale(0.98);
-}
-
-
-/* =====================================================
-   9. ACTIVE TAB
-   ===================================================== */
-
-.pd-tab.active {
-  animation: tabAppear 0.25s ease both;
-}
-
-@keyframes tabAppear {
-  from {
-    opacity: 0.75;
-    transform: translateY(3px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-
-/* =====================================================
-   10. TAB COUNT
-   ===================================================== */
-
-.tab-count {
-  transition:
-    transform 0.2s ease,
-    background 0.2s ease;
+    color 0.2s ease;
 }
 
 .pd-tab:hover .tab-count {
@@ -206,51 +192,68 @@
 
 
 /* =====================================================
-   11. NOTIFICATION PULSE
+   8. LIVE INDICATOR — pulsing ring
+   ===================================================== */
+
+@keyframes liveRing {
+  0% {
+    opacity: 0.6;
+    transform: scale(0.6);
+  }
+
+  70% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+
+
+/* =====================================================
+   9. NOTIFICATION BADGE — gentle attention pulse
    ===================================================== */
 
 @keyframes notificationPulse {
-  0% {
+  0%,
+  100% {
     transform: scale(1);
   }
 
   50% {
-    transform: scale(1.08);
-  }
-
-  100% {
-    transform: scale(1);
+    transform: scale(1.12);
   }
 }
 
 .pd-notification-count {
-  animation: notificationPulse 2.5s ease-in-out infinite;
+  animation: notificationPulse 2.4s ease-in-out infinite;
 }
 
 
 /* =====================================================
-   12. STATUS BADGE
+   10. STATUS BADGE
    ===================================================== */
 
 .status {
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: transform 0.18s ease;
 }
 
 .status:hover {
-  transform: scale(1.04);
+  transform: scale(1.05);
 }
 
 
 /* =====================================================
-   13. CASE DETAIL APPEAR
+   11. CASE DETAIL PANEL — responds to selection
    ===================================================== */
 
 @keyframes detailAppear {
   from {
     opacity: 0;
-    transform: translateX(10px);
+    transform: translateX(12px);
   }
 
   to {
@@ -265,7 +268,22 @@
 
 
 /* =====================================================
-   14. SIGHTING REPORT EMPTY STATE
+   12. PROGRESS BAR — animated fill
+   ===================================================== */
+
+@keyframes progressFill {
+  from {
+    width: 0%;
+  }
+}
+
+.progress-value {
+  animation: progressFill 0.6s ease-out both;
+}
+
+
+/* =====================================================
+   13. EMPTY STATE
    ===================================================== */
 
 @keyframes emptyStateIn {
@@ -284,14 +302,9 @@
   animation: emptyStateIn 0.45s ease both;
 }
 
-
-/* =====================================================
-   15. EMPTY STATE ICON
-   ===================================================== */
-
-.empty-sightings > span:first-child {
-  display: inline-block;
-  animation: iconFloat 2.5s ease-in-out infinite;
+.empty-sightings .empty-icon {
+  display: inline-grid;
+  animation: iconFloat 2.6s ease-in-out infinite;
 }
 
 @keyframes iconFloat {
@@ -301,58 +314,44 @@
   }
 
   50% {
-    transform: translateY(-4px);
+    transform: translateY(-5px);
   }
 }
 
 
 /* =====================================================
-   16. NAVBAR HOVER
+   14. NAVBAR / PROFILE / BELL
    ===================================================== */
 
-.pd-nav-link {
+.pd-nav-link,
+.pd-profile,
+.pd-notification {
   transition:
-    color 0.2s ease,
-    transform 0.2s ease;
+    color 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
 }
 
 .pd-nav-link:hover {
   transform: translateY(-1px);
 }
 
-
-/* =====================================================
-   17. PROFILE HOVER
-   ===================================================== */
-
-.pd-profile {
-  transition:
-    transform 0.2s ease,
-    background 0.2s ease;
-}
-
 .pd-profile:hover {
   transform: translateY(-1px);
-}
-
-
-/* =====================================================
-   18. BELL HOVER
-   ===================================================== */
-
-.pd-notification {
-  transition:
-    transform 0.2s ease,
-    background 0.2s ease;
 }
 
 .pd-notification:hover {
   transform: scale(1.06);
 }
 
+.pd-nav-link::after {
+  transition: transform 0.2s ease;
+}
+
 
 /* =====================================================
-   19. INPUT FOCUS
+   15. INPUT FOCUS
    ===================================================== */
 
 .input,
@@ -370,8 +369,8 @@
 
 
 /* =====================================================
-   20. LOADING SHIMMER
-   Can be used later with .loading-shimmer
+   16. LOADING SHIMMER
+   Reserved for async loading states.
    ===================================================== */
 
 @keyframes shimmer {
@@ -400,25 +399,8 @@
 
 
 /* =====================================================
-   21. RED ACCENT GLOW
-   Optional for important elements
-   ===================================================== */
-
-@keyframes softRedGlow {
-  0%,
-  100% {
-    box-shadow: 0 0 0 rgba(224, 35, 35, 0);
-  }
-
-  50% {
-    box-shadow: 0 0 14px rgba(224, 35, 35, 0.12);
-  }
-}
-
-
-/* =====================================================
-   22. ACCESSIBILITY
-   Disable animations when user requests reduced motion
+   17. ACCESSIBILITY
+   Disable animations when reduced motion is requested.
    ===================================================== */
 
 @media (prefers-reduced-motion: reduce) {

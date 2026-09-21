@@ -1,39 +1,45 @@
 .notification-list {
-  padding: 0 18px 18px;
+  padding: 4px 22px 20px;
 }
 
 .notification-item {
   display: flex;
-  gap: 12px;
-  padding: 13px 4px;
-  border-top: 1px solid #edf0f3;
+  gap: 13px;
+  padding: 15px 4px;
+  border-top: 1px solid #eceef2;
+}
+
+.notification-item:first-child {
+  border-top: none;
 }
 
 .notification-icon {
   display: grid;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   flex-shrink: 0;
   place-items: center;
-  border-radius: 10px;
+  border-radius: 9px;
   color: #e02323;
-  background: #fff1f1;
-  font-weight: 800;
+  background: #fff0f0;
+  font-weight: 700;
 }
 
 .notification-item strong {
   display: block;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .notification-item p {
-  margin: 3px 0;
-  color: #7d8590;
-  font-size: 0.7rem;
+  margin: 4px 0;
+  color: #626a76;
+  font-size: 0.74rem;
   line-height: 1.5;
 }
 
 .notification-item span {
-  color: #a0a6ae;
-  font-size: 0.62rem;
+  color: #90969f;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.64rem;
 }
