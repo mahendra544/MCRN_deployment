@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+const policeRoutes = require("./routes/policeRoutes");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const db = require("./config/db");
@@ -56,6 +57,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/police", policeRoutes);
 
 // =====================================================
 // TEST BACKEND
@@ -163,6 +165,384 @@ app.post("/api/cases", (req, res) => {
     );
 
 });
+// =====================================================
+// CASE VERIFICATION - GET PENDING CASES
+// =====================================================
+
+app.get("/api/admin/cases/pending", (req, res) => {
+
+    const sql = `
+        SELECT *
+        FROM missing_cases
+        WHERE status = 'Pending Verification'
+        ORDER BY created_at DESC
+    `;
+
+    db.query(sql, (err, results) => {
+
+        if (err) {
+
+            console.error(
+                "Error fetching pending cases:",
+                err
+            );
+
+            return res.status(500).json({
+                message: "Failed to fetch pending cases"
+            });
+
+        }
+
+        res.json(results);
+
+    });
+
+});
+// =====================================================
+// CASE VERIFICATION - VERIFY CASE
+// =====================================================
+
+app.put("/api/admin/cases/:id/verify", (req, res) => {
+
+    const { id } = req.params;
+
+    const sql = `
+        UPDATE missing_cases
+        SET status = 'Verified'
+        WHERE id = ?
+          AND status = 'Pending Verification'
+    `;
+
+    db.query(sql, [id], (err, result) => {
+
+        if (err) {
+
+            console.error(
+                "Error verifying case:",
+                err
+            );
+
+            return res.status(500).json({
+                message: "Failed to verify case"
+            });
+
+        }
+
+        if (result.affectedRows === 0) {
+
+            return res.status(404).json({
+                message:
+                    "Case not found or case is already verified"
+            });
+
+        }
+
+        res.json({
+
+            success: true,
+
+            message:
+                "Case verified successfully"
+
+        });
+
+    });
+
+});
+// REJECT CASE
+app.put("/api/admin/cases/:id/reject", (req, res) => {
+    const { id } = req.params;
+
+    const sql = `
+        UPDATE missing_cases
+        SET status = 'Rejected'
+        WHERE id = ?
+          AND status = 'Pending Verification'
+    `;
+
+    db.query(sql, [id], (err, result) => {
+
+        if (err) {
+            console.error("Error rejecting case:", err);
+
+            return res.status(500).json({
+                message: "Failed to reject case"
+            });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
+                message:
+                    "Case not found or case is not pending verification"
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Case rejected successfully"
+        });
+    });
+
+});
+// UPDATE CASE PRIORITY
+app.put("/api/admin/cases/:id/priority", (req, res) => {
+    const { id } = req.params;
+    const { priority } = req.body;
+
+    // Check priority value
+    if (!["Low", "Medium", "High"].includes(priority)) {
+        return res.status(400).json({
+            message: "Priority must be Low, Medium, or High"
+        });
+    }
+
+    const sql = `
+        UPDATE missing_cases
+        SET priority = ?
+        WHERE id = ?
+    `;
+
+    db.query(sql, [priority, id], (err, result) => {
+        if (err) {
+            console.error("Error updating priority:", err);
+
+            return res.status(500).json({
+                message: "Failed to update priority"
+            });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
+                message: "Case not found"
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Case priority updated successfully"
+        });
+    });
+});
+// =====================================================
+// UPDATE CASE STATUS
+// =====================================================
+
+app.put("/api/admin/cases/:id/status", (req, res) => {
+
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const allowedStatuses = [
+        "Pending Verification",
+        "Verified",
+        "Rejected",
+        "Assigned",
+        "Investigation",
+        "Child Located",
+        "Resolved",
+        "Closed"
+    ];
+
+    if (!allowedStatuses.includes(status)) {
+
+        return res.status(400).json({
+            message: "Invalid case status"
+        });
+
+    }
+
+    const sql = `
+        UPDATE missing_cases
+        SET status = ?
+        WHERE id = ?
+    `;
+
+    db.query(sql, [status, id], (err, result) => {
+
+        if (err) {
+
+            console.error(
+                "Error updating case status:",
+                err
+            );
+
+            return res.status(500).json({
+                message: "Failed to update case status"
+            });
+
+        }
+
+        if (result.affectedRows === 0) {
+
+            return res.status(404).json({
+                message: "Case not found"
+            });
+
+        }
+
+        res.json({
+
+            success: true,
+
+            message:
+                "Case status updated successfully"
+
+        });
+
+    });
+
+});
+
+
+   
+// =====================================================
+// ASSIGN CASE TO POLICE OFFICER
+// =====================================================
+
+app.post("/api/admin/cases/:id/assign", (req, res) => {
+
+    const { id } = req.params;
+
+    const {
+        officer_id,
+        deadline
+    } = req.body;
+
+    // Check required value
+    if (!officer_id) {
+
+        return res.status(400).json({
+            message: "Officer ID is required"
+        });
+
+    }
+
+    // =====================================================
+    // CHECK WHETHER CASE EXISTS
+    // =====================================================
+
+    const checkCaseSql = `
+        SELECT id, status
+        FROM missing_cases
+        WHERE id = ?
+    `;
+
+    db.query(
+        checkCaseSql,
+        [id],
+        (err, caseResults) => {
+
+            if (err) {
+
+                console.error(
+                    "Error checking case:",
+                    err
+                );
+
+                return res.status(500).json({
+                    message: "Database error"
+                });
+
+            }
+
+            if (caseResults.length === 0) {
+
+                return res.status(404).json({
+                    message: "Case not found"
+                });
+
+            }
+
+            // =====================================================
+            // INSERT CASE ASSIGNMENT
+            // =====================================================
+
+            const assignmentSql = `
+                INSERT INTO case_assignments
+                (case_id, officer_id, deadline)
+                VALUES (?, ?, ?)
+            `;
+
+            db.query(
+                assignmentSql,
+                [
+                    id,
+                    officer_id,
+                    deadline || null
+                ],
+                (err, result) => {
+
+                    if (err) {
+
+                        console.error(
+                            "Error assigning case:",
+                            err
+                        );
+
+                        return res.status(500).json({
+                            message:
+                                "Failed to assign case"
+                        });
+
+                    }
+
+                    // =====================================================
+                    // UPDATE CASE STATUS
+                    // =====================================================
+
+                    const updateCaseSql = `
+                        UPDATE missing_cases
+                        SET status = 'Assigned'
+                        WHERE id = ?
+                    `;
+
+                    db.query(
+                        updateCaseSql,
+                        [id],
+                        (err) => {
+
+                            if (err) {
+
+                                console.error(
+                                    "Error updating case status:",
+                                    err
+                                );
+
+                                return res.status(500).json({
+                                    message:
+                                        "Assignment created but case status update failed"
+                                });
+
+                            }
+
+                            // =====================================================
+                            // SUCCESS RESPONSE
+                            // =====================================================
+
+                            res.json({
+
+                                success: true,
+
+                                message:
+                                    "Case assigned successfully",
+
+                                assignment_id:
+                                    result.insertId
+
+                            });
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+});
+
+            
 
 // =====================================================
 // ADMIN LOGIN
