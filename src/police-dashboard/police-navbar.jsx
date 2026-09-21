@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
 
 function BellIcon() {
@@ -113,6 +114,13 @@ function SearchIcon() {
 }
 
 function PoliceNavbar() {
+  const [profileOpen, setProfileOpen] = useState(false);
+
+  function handleLogout() {
+    setProfileOpen(false);
+    window.location.href = "/login";
+  }
+
   return (
     <header className="pd-navbar">
       <div className="pd-navbar-inner">
@@ -126,7 +134,7 @@ function PoliceNavbar() {
           className="pd-brand"
         >
           <div className="pd-brand-mark">
-            <img src="missing-child-logo.jpeg"></img>
+            <img src="missing-child-logo.jpeg" alt="Missing Child Rescue Network" />
           </div>
 
           <div className="pd-brand-text">
@@ -229,26 +237,69 @@ function PoliceNavbar() {
           </NavLink>
 
           {/* Profile */}
-          <NavLink
-            to="/police-profile#profile-section"
-            className="pd-profile"
-          >
-            <div className="pd-profile-avatar">
-              RN
-            </div>
+          <div className="pd-profile-wrapper">
 
-            <div className="pd-profile-info">
-              <strong>Insp. Naidu</strong>
+            <button
+              type="button"
+              className="pd-profile"
+              onClick={() => setProfileOpen((current) => !current)}
+              aria-expanded={profileOpen}
+              aria-haspopup="true"
+            >
+              <div className="pd-profile-avatar">
+                RN
+              </div>
 
-              <span>
-                Police Officer
+              <div className="pd-profile-info">
+                <strong>Insp. Naidu</strong>
+
+                <span>
+                  Police Officer
+                </span>
+              </div>
+
+              <span
+                className={`pd-profile-arrow ${
+                  profileOpen ? "open" : ""
+                }`}
+              >
+                ⌄
               </span>
-            </div>
+            </button>
 
-            <span className="pd-profile-arrow">
-              ⌄
-            </span>
-          </NavLink>
+            {profileOpen && (
+              <div className="pd-profile-menu">
+
+                <NavLink
+                  to="/police-profile#profile-section"
+                  className="pd-profile-menu-profile"
+                  onClick={() => setProfileOpen(false)}
+                >
+                  <span className="pd-profile-menu-icon">
+                    👤
+                  </span>
+
+                  <span>View Profile</span>
+                </NavLink>
+
+                <div className="pd-profile-menu-divider" />
+
+                <button
+                  type="button"
+                  className="pd-logout-button"
+                  onClick={handleLogout}
+                >
+                  <span className="pd-logout-icon">
+                    ↪
+                  </span>
+
+                  <span>Logout</span>
+                </button>
+
+              </div>
+            )}
+
+          </div>
 
         </div>
 
