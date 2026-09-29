@@ -12,37 +12,54 @@ import UserManagement from "./UserManagement";
 import Analytics from "./Analytics";
 import Notifications from "./Notifications";
 import AuditLogs from "./AuditLogs";
+import AdminProfile from "./AdminProfile";
+
 import "./admin-dashboard.css";
-function AdminDashboard({onLogout}) {
+
+function AdminDashboard({ onLogout }) {
   const [activePage, setActivePage] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const renderPage = () => {
     switch (activePage) {
       case "dashboard":
-        return <Dashboard />;
+        return <Dashboard  setActivePage={setActivePage}/>;
+
       case "verification":
         return <CaseVerification />;
+
       case "cases":
         return <CaseManagement />;
+
       case "assignment":
         return <CaseAssignment />;
+
       case "police":
         return <PoliceManagement />;
+
       case "users":
         return <UserManagement />;
+
       case "analytics":
         return <Analytics />;
+
       case "notifications":
         return <Notifications />;
+
       case "audit":
         return <AuditLogs />;
+
+      case "profile":
+        return <AdminProfile />;
+
       default:
         return <Dashboard />;
     }
   };
+
   return (
     <div className="admin-layout">
+
       <Sidebar
         activePage={activePage}
         setActivePage={setActivePage}
@@ -52,11 +69,16 @@ function AdminDashboard({onLogout}) {
       />
 
       <div className="admin-content">
-        <Header setSidebarOpen={setSidebarOpen} />
+
+        <Header
+          setSidebarOpen={setSidebarOpen}
+          setActivePage={setActivePage}
+        />
 
         <main className="admin-main">
           {renderPage()}
         </main>
+
       </div>
     </div>
   );

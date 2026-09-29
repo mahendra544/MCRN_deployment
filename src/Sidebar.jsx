@@ -1,6 +1,13 @@
 import React from "react";
 import logo from "./logo.png";
-function Sidebar({ activePage, setActivePage, sidebarOpen, setSidebarOpen ,onLogout}) {
+
+function Sidebar({
+  activePage,
+  setActivePage,
+  sidebarOpen,
+  setSidebarOpen,
+  onLogout,
+}) {
   const menuItems = [
     { id: "dashboard", icon: "🏠", label: "Dashboard" },
     { id: "verification", icon: "✓", label: "Case Verification" },
@@ -10,7 +17,7 @@ function Sidebar({ activePage, setActivePage, sidebarOpen, setSidebarOpen ,onLog
     { id: "users", icon: "👤", label: "User Management" },
     { id: "analytics", icon: "📊", label: "Analytics" },
     { id: "notifications", icon: "🔔", label: "Notifications" },
-    { id: "audit", icon: "📋", label: "Audit Logs" }
+    { id: "audit", icon: "📋", label: "Audit Logs" },
   ];
 
   const handleClick = (id) => {
@@ -18,14 +25,25 @@ function Sidebar({ activePage, setActivePage, sidebarOpen, setSidebarOpen ,onLog
     setSidebarOpen(false);
   };
 
+  // Get logged-in admin details
+  const adminData = JSON.parse(
+    localStorage.getItem("adminData") || "{}"
+  );
+
+  const adminName = adminData.name || "Admin";
+  const adminRole = adminData.role || "Administrator";
+
   return (
     <aside className={`admin-sidebar ${sidebarOpen ? "open" : ""}`}>
+      
       <div className="admin-logo">
         <div className="logo-box">
-           <img src={logo} alt="Missing Child Rescue Network Logo" />
-      
-
+          <img
+            src={logo}
+            alt="Missing Child Rescue Network Logo"
+          />
         </div>
+
         <div>
           <h2>Missing Child</h2>
           <h3>Rescue Network</h3>
@@ -38,7 +56,9 @@ function Sidebar({ activePage, setActivePage, sidebarOpen, setSidebarOpen ,onLog
         {menuItems.map((item) => (
           <button
             key={item.id}
-            className={`sidebar-item ${activePage === item.id ? "active" : ""}`}
+            className={`sidebar-item ${
+              activePage === item.id ? "active" : ""
+            }`}
             onClick={() => handleClick(item.id)}
           >
             <span className="sidebar-icon">{item.icon}</span>
@@ -47,30 +67,49 @@ function Sidebar({ activePage, setActivePage, sidebarOpen, setSidebarOpen ,onLog
         ))}
       </nav>
 
-      <div className="sidebar-bottom">
-        <div className="admin-profile">
-          <div className="profile-avatar">A</div>
-          <div>
-            <strong>Admin</strong>
-            <span>Administrator</span>
+      {/* Admin Profile */}
+      <div
+        className={`sidebar-profile ${
+          activePage === "profile" ? "profile-active" : ""
+        }`}
+        onClick={() => handleClick("profile")}
+        style={{ cursor: "pointer" }}
+      >
+        <div className="profile-avatar">
+          {adminName.charAt(0).toUpperCase()}
+        </div>
+
+        <div>
+          <div className="profile-name">
+            {adminName}
+          </div>
+
+          <div className="profile-role">
+            {adminRole}
           </div>
         </div>
-        <button onClick={onLogout}   style={{
-    width: "100%",
-    padding: "10px 14px",
-    marginTop: "12px",
-    border: "1px solid rgba(255,255,255,0.2)",
-    borderRadius: "6px",
-    background: "rgba(255,255,255,0.08)",
-    color: "#ffffff",
-    fontSize: "14px",
-    fontWeight: "600",
-    textAlign: "left",
-    cursor: "pointer",
-  }}>
-  Logout
-</button>
       </div>
+
+      {/* Logout */}
+      <button
+        onClick={onLogout}
+        style={{
+          width: "100%",
+          padding: "10px 14px",
+          marginTop: "12px",
+          border: "1px solid rgba(255,255,255,0.2)",
+          borderRadius: "6px",
+          background: "rgba(255,255,255,0.08)",
+          color: "#ffffff",
+          fontSize: "14px",
+          fontWeight: "600",
+          textAlign: "left",
+          cursor: "pointer",
+        }}
+      >
+        Logout
+      </button>
+
     </aside>
   );
 }

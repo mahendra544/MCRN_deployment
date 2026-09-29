@@ -70,7 +70,16 @@ const [showVerification, setShowVerification] = useState(false);
 
       // Login successful
 localStorage.setItem("adminLoggedIn", "true");
+localStorage.setItem("adminLoggedIn", "true");
 
+localStorage.setItem(
+    "adminData",
+    JSON.stringify(data.admin)
+);
+
+setSubmitting(false);
+
+setShowVerification(true);
 setSubmitting(false);
 
 // Show Security Verification page
