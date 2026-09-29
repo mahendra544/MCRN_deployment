@@ -5,6 +5,10 @@ const policeRoutes = require("./routes/policeRoutes");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const db = require("./config/db");
+const userRoutes = require("./routes/userRoutes");
+const analyticsRoutes = require("./routes/analyticsRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
+const auditLogRoutes = require("./routes/auditLogRoutes");
 
 // =====================================================
 // AUTHORIZED ADMIN EMAILS
@@ -57,7 +61,12 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
 app.use("/api/police", policeRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/analytics", analyticsRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/audit-logs", auditLogRoutes);
 
 // =====================================================
 // TEST BACKEND
@@ -111,7 +120,6 @@ app.post("/api/cases", (req, res) => {
         priority
     } = req.body;
 
-    // Check required values
     if (!child_name || !age || !gender || !location) {
 
         return res.status(400).json({
@@ -165,6 +173,7 @@ app.post("/api/cases", (req, res) => {
     );
 
 });
+
 // =====================================================
 // CASE VERIFICATION - GET PENDING CASES
 // =====================================================
@@ -198,6 +207,7 @@ app.get("/api/admin/cases/pending", (req, res) => {
     });
 
 });
+
 // =====================================================
 // CASE VERIFICATION - VERIFY CASE
 // =====================================================
@@ -237,21 +247,53 @@ app.put("/api/admin/cases/:id/verify", (req, res) => {
 
         }
 
-        res.json({
+        // CREATE AUDIT LOG
+        const auditSql = `
+            INSERT INTO audit_logs
+            (action, description, performed_by)
+            VALUES (?, ?, ?)
+        `;
 
-            success: true,
+        db.query(
+            auditSql,
+            [
+                "Case Verified",
+                `Case ID ${id} was verified by admin.`,
+                "Admin"
+            ],
+            (auditErr) => {
 
-            message:
-                "Case verified successfully"
+                if (auditErr) {
 
-        });
+                    console.error(
+                        "Error creating audit log:",
+                        auditErr
+                    );
+
+                }
+
+                res.json({
+                    success: true,
+                    message: "Case verified successfully"
+                });
+
+            }
+        );
 
     });
 
 });
+
+
+// =====================================================
 // REJECT CASE
+// =====================================================
+
 app.put("/api/admin/cases/:id/reject", (req, res) => {
+
     const { id } = req.params;
+
+    console.log("➡️ Reject request received for case:", id);
 
     const sql = `
         UPDATE missing_cases
@@ -260,40 +302,99 @@ app.put("/api/admin/cases/:id/reject", (req, res) => {
           AND status = 'Pending Verification'
     `;
 
+    console.log("➡️ Updating case...");
+
     db.query(sql, [id], (err, result) => {
 
         if (err) {
-            console.error("Error rejecting case:", err);
+            console.error("❌ Error rejecting case:", err);
 
             return res.status(500).json({
                 message: "Failed to reject case"
             });
         }
 
+        console.log(
+            "✅ Case update completed. Affected rows:",
+            result.affectedRows
+        );
+
         if (result.affectedRows === 0) {
+
             return res.status(404).json({
                 message:
                     "Case not found or case is not pending verification"
             });
+
         }
 
-        res.json({
-            success: true,
-            message: "Case rejected successfully"
-        });
+        // CREATE AUDIT LOG
+        const auditSql = `
+            INSERT INTO audit_logs
+            (action, description, performed_by)
+            VALUES (?, ?, ?)
+        `;
+
+        console.log("➡️ Creating audit log...");
+
+        db.query(
+            auditSql,
+            [
+                "Case Rejected",
+                `Case ID ${id} was rejected by admin.`,
+                "Admin"
+            ],
+            (auditErr, auditResult) => {
+
+                if (auditErr) {
+
+                    console.error(
+                        "❌ Error creating audit log:",
+                        auditErr
+                    );
+
+                    return res.status(500).json({
+                        message: "Case rejected, but audit log failed"
+                    });
+                }
+
+                console.log(
+                    "✅ Audit log created. ID:",
+                    auditResult.insertId
+                );
+
+                res.json({
+                    success: true,
+                    message: "Case rejected successfully"
+                });
+
+            }
+        );
+
     });
 
 });
+// =====================================================
 // UPDATE CASE PRIORITY
+// =====================================================
+
 app.put("/api/admin/cases/:id/priority", (req, res) => {
+
     const { id } = req.params;
     const { priority } = req.body;
 
-    // Check priority value
-    if (!["Low", "Medium", "High"].includes(priority)) {
+    const allowedPriorities = [
+        "Low",
+        "Medium",
+        "High"
+    ];
+
+    if (!allowedPriorities.includes(priority)) {
+
         return res.status(400).json({
-            message: "Priority must be Low, Medium, or High"
+            message: "Invalid case priority"
         });
+
     }
 
     const sql = `
@@ -303,25 +404,35 @@ app.put("/api/admin/cases/:id/priority", (req, res) => {
     `;
 
     db.query(sql, [priority, id], (err, result) => {
+
         if (err) {
-            console.error("Error updating priority:", err);
+
+            console.error(
+                "Error updating case priority:",
+                err
+            );
 
             return res.status(500).json({
-                message: "Failed to update priority"
+                message: "Failed to update case priority"
             });
+
         }
 
         if (result.affectedRows === 0) {
+
             return res.status(404).json({
                 message: "Case not found"
             });
+
         }
 
         res.json({
             success: true,
             message: "Case priority updated successfully"
         });
+
     });
+
 });
 // =====================================================
 // UPDATE CASE STATUS
@@ -393,8 +504,6 @@ app.put("/api/admin/cases/:id/status", (req, res) => {
 
 });
 
-
-   
 // =====================================================
 // ASSIGN CASE TO POLICE OFFICER
 // =====================================================
@@ -408,7 +517,6 @@ app.post("/api/admin/cases/:id/assign", (req, res) => {
         deadline
     } = req.body;
 
-    // Check required value
     if (!officer_id) {
 
         return res.status(400).json({
@@ -416,10 +524,6 @@ app.post("/api/admin/cases/:id/assign", (req, res) => {
         });
 
     }
-
-    // =====================================================
-    // CHECK WHETHER CASE EXISTS
-    // =====================================================
 
     const checkCaseSql = `
         SELECT id, status
@@ -453,10 +557,6 @@ app.post("/api/admin/cases/:id/assign", (req, res) => {
 
             }
 
-            // =====================================================
-            // INSERT CASE ASSIGNMENT
-            // =====================================================
-
             const assignmentSql = `
                 INSERT INTO case_assignments
                 (case_id, officer_id, deadline)
@@ -486,10 +586,6 @@ app.post("/api/admin/cases/:id/assign", (req, res) => {
 
                     }
 
-                    // =====================================================
-                    // UPDATE CASE STATUS
-                    // =====================================================
-
                     const updateCaseSql = `
                         UPDATE missing_cases
                         SET status = 'Assigned'
@@ -515,10 +611,6 @@ app.post("/api/admin/cases/:id/assign", (req, res) => {
 
                             }
 
-                            // =====================================================
-                            // SUCCESS RESPONSE
-                            // =====================================================
-
                             res.json({
 
                                 success: true,
@@ -542,8 +634,6 @@ app.post("/api/admin/cases/:id/assign", (req, res) => {
 
 });
 
-            
-
 // =====================================================
 // ADMIN LOGIN
 // =====================================================
@@ -552,7 +642,6 @@ app.post("/api/admin/login", (req, res) => {
 
     const { email, password } = req.body;
 
-    // Check authorized email
     if (!ADMIN_EMAILS.includes(email)) {
 
         return res.status(401).json({
@@ -564,7 +653,6 @@ app.post("/api/admin/login", (req, res) => {
 
     }
 
-    // Get common admin password from MySQL
     const sql =
         "SELECT admin_password FROM admin_settings WHERE id = 1";
 
@@ -588,7 +676,6 @@ app.post("/api/admin/login", (req, res) => {
 
         }
 
-        // Check password
         if (password !== results[0].admin_password) {
 
             return res.status(401).json({
@@ -597,7 +684,6 @@ app.post("/api/admin/login", (req, res) => {
 
         }
 
-        // Login successful
         res.json({
 
             success: true,
@@ -619,9 +705,11 @@ app.post("/api/admin/forgot-password", async (req, res) => {
 
     const { email } = req.body;
 
-    console.log("📩 Current password request for:", email);
+    console.log(
+        "📩 Current password request for:",
+        email
+    );
 
-    // Check authorized email
     if (!ADMIN_EMAILS.includes(email)) {
 
         return res.status(401).json({
@@ -630,7 +718,6 @@ app.post("/api/admin/forgot-password", async (req, res) => {
 
     }
 
-    // Get current password from MySQL
     const sql =
         "SELECT admin_password FROM admin_settings WHERE id = 1";
 
@@ -638,7 +725,10 @@ app.post("/api/admin/forgot-password", async (req, res) => {
 
         if (err) {
 
-            console.error("❌ Database error:", err);
+            console.error(
+                "❌ Database error:",
+                err
+            );
 
             return res.status(500).json({
                 message: "Database error"
@@ -659,7 +749,9 @@ app.post("/api/admin/forgot-password", async (req, res) => {
 
         try {
 
-            console.log("📤 Sending current password email...");
+            console.log(
+                "📤 Sending current password email..."
+            );
 
             const info = await transporter.sendMail({
 
@@ -719,9 +811,11 @@ app.post("/api/admin/request-reset", async (req, res) => {
 
     const { email } = req.body;
 
-    console.log("📩 Reset request for:", email);
+    console.log(
+        "📩 Reset request for:",
+        email
+    );
 
-    // Check authorized email
     if (!ADMIN_EMAILS.includes(email)) {
 
         return res.status(401).json({
@@ -732,7 +826,6 @@ app.post("/api/admin/request-reset", async (req, res) => {
 
     try {
 
-        // Create JWT reset token
         const token = jwt.sign(
 
             {
@@ -747,13 +840,11 @@ app.post("/api/admin/request-reset", async (req, res) => {
 
         );
 
-        // Reset link
         const resetLink =
             `http://localhost:5181/reset-password/${token}`;
 
         console.log("🔗 Reset link created");
 
-        // Send reset email
         console.log("📤 Sending reset email...");
 
         const info = await transporter.sendMail({
@@ -840,7 +931,6 @@ app.post("/api/admin/reset-password", (req, res) => {
 
     try {
 
-        // Verify token
         const decoded = jwt.verify(
 
             token,
@@ -849,7 +939,6 @@ app.post("/api/admin/reset-password", (req, res) => {
 
         );
 
-        // Check authorized email
         if (!ADMIN_EMAILS.includes(decoded.email)) {
 
             return res.status(401).json({
@@ -861,7 +950,6 @@ app.post("/api/admin/reset-password", (req, res) => {
 
         }
 
-        // Update common admin password
         const sql = `
             UPDATE admin_settings
             SET admin_password = ?
