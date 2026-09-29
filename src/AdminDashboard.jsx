@@ -13,7 +13,7 @@ import Analytics from "./Analytics";
 import Notifications from "./Notifications";
 import AuditLogs from "./AuditLogs";
 import "./admin-dashboard.css";
-function AdminDashboard() {
+function AdminDashboard({onLogout}) {
   const [activePage, setActivePage] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -48,6 +48,7 @@ function AdminDashboard() {
         setActivePage={setActivePage}
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
+        onLogout={onLogout}
       />
 
       <div className="admin-content">

@@ -1,6 +1,6 @@
 import React from "react";
 import logo from "./logo.png";
-function Sidebar({ activePage, setActivePage, sidebarOpen, setSidebarOpen }) {
+function Sidebar({ activePage, setActivePage, sidebarOpen, setSidebarOpen ,onLogout}) {
   const menuItems = [
     { id: "dashboard", icon: "🏠", label: "Dashboard" },
     { id: "verification", icon: "✓", label: "Case Verification" },
@@ -55,7 +55,21 @@ function Sidebar({ activePage, setActivePage, sidebarOpen, setSidebarOpen }) {
             <span>Administrator</span>
           </div>
         </div>
-        <button className="logout-button">⇥ Logout</button>
+        <button onClick={onLogout}   style={{
+    width: "100%",
+    padding: "10px 14px",
+    marginTop: "12px",
+    border: "1px solid rgba(255,255,255,0.2)",
+    borderRadius: "6px",
+    background: "rgba(255,255,255,0.08)",
+    color: "#ffffff",
+    fontSize: "14px",
+    fontWeight: "600",
+    textAlign: "left",
+    cursor: "pointer",
+  }}>
+  Logout
+</button>
       </div>
     </aside>
   );

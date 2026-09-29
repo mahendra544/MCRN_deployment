@@ -40,8 +40,8 @@ function CaseAssignment() {
 
             // Get police officers
             const officersResponse = await fetch(
-                "http://localhost:5000/api/admin/police-officers"
-            );
+    "http://localhost:5000/api/police"
+);
 
             const officersData = await officersResponse.json();
 
@@ -53,7 +53,7 @@ function CaseAssignment() {
             }
 
             setCases(casesData);
-            setOfficers(officersData);
+            setOfficers(officersData.police || []);
 
         } catch (err) {
 
@@ -310,7 +310,7 @@ function CaseAssignment() {
             value={officer.id}
         >
             {officer.name} —{" "}
-            {officer.officer_rank}
+            {officer.police_rank}
         </option>
     ))}
 

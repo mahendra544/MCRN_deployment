@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 function CaseVerification() {
   const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [processingId, setProcessingId] = useState(null);
 
   // Fetch pending cases from backend
   const fetchCases = async () => {
@@ -28,6 +29,8 @@ function CaseVerification() {
 
   // Verify case
   const handleVerify = async (id) => {
+    setProcessingId(id);
+
     try {
       const response = await fetch(
         `http://localhost:5000/api/admin/cases/${id}/verify`,
@@ -51,11 +54,15 @@ function CaseVerification() {
     } catch (error) {
       console.error("Error verifying case:", error);
       alert("Failed to verify case");
+    } finally {
+      setProcessingId(null);
     }
   };
 
   // Reject case
   const handleReject = async (id) => {
+    setProcessingId(id);
+
     try {
       const response = await fetch(
         `http://localhost:5000/api/admin/cases/${id}/reject`,
@@ -79,6 +86,8 @@ function CaseVerification() {
     } catch (error) {
       console.error("Error rejecting case:", error);
       alert("Failed to reject case");
+    } finally {
+      setProcessingId(null);
     }
   };
 
@@ -204,8 +213,11 @@ function CaseVerification() {
                         onClick={() =>
                           handleVerify(item.id)
                         }
+                        disabled={processingId === item.id}
                       >
-                        Verify
+                        {processingId === item.id
+                          ? "Processing..."
+                          : "Verify"}
                       </button>
 
                       <button
@@ -213,8 +225,11 @@ function CaseVerification() {
                         onClick={() =>
                           handleReject(item.id)
                         }
+                        disabled={processingId === item.id}
                       >
-                        Reject
+                        {processingId === item.id
+                          ? "Processing..."
+                          : "Reject"}
                       </button>
                     </td>
                   </tr>
