@@ -1,5 +1,7 @@
 import React from "react";
+import Navbar from "../components/navbar";
 import "./ContactUs.css";
+import "../components/animations.css";
 
 function ContactUs() {
 
@@ -16,13 +18,23 @@ function ContactUs() {
   };
 
   return (
-    <div className="contact-page">
+    <div
+      className="contact-page"
+      style={{ paddingTop: "100px" }}
+    >
+
+      <Navbar />
 
       <div className="contact-container">
 
         {/* Page Heading */}
 
-        <div className="contact-header">
+        <div
+          className="contact-header"
+          style={{
+            animation: "riseIn 800ms var(--ease) both"
+          }}
+        >
 
           <p className="project-name">
             MISSING CHILD RESCUE NETWORK
@@ -39,7 +51,12 @@ function ContactUs() {
 
         {/* Mobile Number Card */}
 
-        <div className="contact-card">
+        <div
+          className="contact-card"
+          style={{
+            animation: "riseIn 700ms var(--ease) 150ms both"
+          }}
+        >
 
           <div className="contact-icon">
             📞
@@ -69,7 +86,12 @@ function ContactUs() {
 
         {/* Email Card */}
 
-        <div className="contact-card">
+        <div
+          className="contact-card"
+          style={{
+            animation: "riseIn 700ms var(--ease) 300ms both"
+          }}
+        >
 
           <div className="contact-icon">
             ✉️
@@ -99,7 +121,12 @@ function ContactUs() {
 
         {/* Emergency Helpline */}
 
-        <div className="emergency-card">
+        <div
+          className="emergency-card"
+          style={{
+            animation: "softScale 700ms var(--ease) 450ms both"
+          }}
+        >
 
           <p className="emergency-title">
             🚨 Emergency Helpline (24/7, Toll Free)

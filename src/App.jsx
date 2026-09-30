@@ -1,8 +1,13 @@
 import { Routes, Route } from "react-router-dom";
 
-import ReportMissingChild from "./components/ReportMissingChild";
-import Reports from "./components/Reports";
+import UserDashboard from "./pages/user_dashboard";
+import SearchChildren from "./pages/search_children";
+import ChildDetails from "./pages/child_details";
 import Sightings from "./sightings.jsx";
+import AboutUs from "./pages/aboutus";
+import ReportMissingChild from "./components/ReportMissingChild";
+import ContactUs from "./components/ContactUs";
+import Reports from "./components/Reports";
 import PoliceDashboard from "./police-dashboard/police-dashboard.jsx";
 
 import "./css/main.css";
@@ -14,7 +19,40 @@ import "./responsive.css";
 function App() {
   return (
     <Routes>
-      {/* Public / Missing Child Reporting */}
+      {/* User Dashboard */}
+      <Route
+        path="/user-dashboard"
+        element={<UserDashboard />}
+      />
+
+      {/* Search Children */}
+      <Route
+        path="/search-children"
+        element={<SearchChildren />}
+      />
+
+      {/* Child Details */}
+      <Route
+        path="/child/:caseId"
+        element={<ChildDetails />}
+      />
+
+      {/* Public / Sightings */}
+      <Route path="/report-sighting" element={<Sightings />} />
+
+      {/* About Us */}
+      <Route
+        path="/about-us"
+        element={<AboutUs />}
+      />
+
+      {/* Contact Us */}
+      <Route
+        path="/contact-us"
+        element={<ContactUs />}
+      />
+
+      {/* Missing Child Reporting */}
       <Route
         path="/report-child"
         element={
@@ -24,10 +62,6 @@ function App() {
           </>
         }
       />
-
-      {/* Public / Sightings */}
-      <Route path="/" element={<Sightings />} />
-      <Route path="/report-sighting" element={<Sightings />} />
 
       {/* Police Dashboard */}
       <Route
@@ -58,6 +92,12 @@ function App() {
       <Route
         path="/police-profile"
         element={<PoliceDashboard />}
+      />
+
+      {/* Default page */}
+      <Route
+        path="*"
+        element={<UserDashboard />}
       />
     </Routes>
   );
