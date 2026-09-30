@@ -1,0 +1,1647 @@
+/* =========================================================
+   SEARCH CHILDREN PAGE
+========================================================= */
+
+.search-page {
+  min-height: 100vh;
+
+  box-sizing: border-box;
+
+  background: #ffffff;
+
+  color: #171717;
+
+  font-family: inherit;
+
+  padding-top: 32px;
+}
+
+
+/* =========================================================
+   SEARCH HERO
+========================================================= */
+
+.search-hero {
+  padding: 58px 20px 30px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #fff4f4 0%,
+      #fff8f8 100%
+    );
+
+  text-align: center;
+}
+
+
+.search-hero-content {
+  width: min(1050px, 100%);
+
+  margin: 0 auto;
+}
+
+
+/* =========================================================
+   EYEBROW
+========================================================= */
+
+.search-eyebrow {
+  display: inline-block;
+
+  margin-bottom: 12px;
+
+  color: #e52323;
+
+  font-size: 0.78rem;
+
+  font-weight: 900;
+
+  letter-spacing: 0.11em;
+}
+
+
+/* =========================================================
+   HERO TITLE
+========================================================= */
+
+.search-hero h1 {
+  max-width: 850px;
+
+  margin: 0 auto;
+
+  color: #171717;
+
+  font-size: clamp(
+    2.15rem,
+    4vw,
+    3.25rem
+  );
+
+  font-weight: 800;
+
+  line-height: 1.1;
+
+  letter-spacing: -0.045em;
+}
+
+
+.search-hero h1 span {
+  color: #e52323;
+}
+
+
+/* =========================================================
+   HERO DESCRIPTION
+========================================================= */
+
+.search-hero p {
+  max-width: 650px;
+
+  margin: 16px auto 30px;
+
+  color: #60656c;
+
+  font-size: 0.98rem;
+
+  line-height: 1.6;
+}
+
+
+/* =========================================================
+   SEARCH BAR
+========================================================= */
+
+.hero-search-box {
+  display: flex;
+
+  align-items: center;
+
+  width: min(850px, 100%);
+
+  height: 60px;
+
+  margin: 0 auto;
+
+  padding: 5px;
+
+  border: 1px solid #f0dddd;
+
+  border-radius: 999px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 10px 28px
+    rgba(130, 40, 40, 0.13);
+
+  box-sizing: border-box;
+}
+
+
+.hero-search-box input {
+  flex: 1;
+
+  min-width: 0;
+
+  height: 100%;
+
+  padding: 0 22px;
+
+  border: none;
+
+  outline: none;
+
+  background: transparent;
+
+  color: #333333;
+
+  font-family: inherit;
+
+  font-size: 0.9rem;
+}
+
+
+.hero-search-box input::placeholder {
+  color: #858b92;
+}
+
+
+.hero-search-box button {
+  width: 125px;
+
+  height: 48px;
+
+  border: none;
+
+  border-radius: 999px;
+
+  background: #e52323;
+
+  color: #ffffff;
+
+  font-family: inherit;
+
+  font-size: 0.78rem;
+
+  font-weight: 850;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+.hero-search-box button:hover {
+  background: #c91d1d;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 7px 16px
+    rgba(229, 35, 35, 0.22);
+}
+
+
+/* =========================================================
+   SEARCH TABS
+========================================================= */
+
+.search-tabs {
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  flex-wrap: wrap;
+
+  gap: 9px;
+
+  margin-top: 17px;
+}
+
+
+.search-tabs button {
+  padding: 10px 18px;
+
+  border: 1px solid #e5e7e9;
+
+  border-radius: 999px;
+
+  background: #ffffff;
+
+  color: #62676d;
+
+  font-family: inherit;
+
+  font-size: 0.73rem;
+
+  font-weight: 750;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    border 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+.search-tabs button:hover {
+  border-color: #e52323;
+
+  color: #e52323;
+
+  transform: translateY(-1px);
+}
+
+
+.search-tabs button.active {
+  border-color: #e52323;
+
+  background: #e52323;
+
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   MAIN SEARCH AREA
+========================================================= */
+
+.search-main {
+  padding: 45px 20px 70px;
+
+  background: #ffffff;
+}
+
+
+.search-container {
+  width: min(1180px, 100%);
+
+  margin: 0 auto;
+}
+
+
+/* =========================================================
+   SEARCH LAYOUT
+========================================================= */
+
+.search-layout {
+  display: grid;
+
+  grid-template-columns:
+    250px
+    minmax(0, 1fr);
+
+  gap: 30px;
+
+  align-items: start;
+}
+
+
+/* =========================================================
+   FILTER SIDEBAR
+========================================================= */
+
+.filter-sidebar {
+  position: sticky;
+
+  top: calc(var(--header-height) + 20px);
+
+  height: fit-content;
+
+  max-height:
+    calc(100vh - var(--header-height) - 40px);
+
+  overflow-y: auto;
+
+  padding: 22px;
+
+  border: 1px solid #e8eaed;
+
+  border-radius: 17px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 6px 22px
+    rgba(0, 0, 0, 0.045);
+
+  box-sizing: border-box;
+
+  scrollbar-width: thin;
+
+  scrollbar-color:
+    #d7d7d7
+    transparent;
+}
+
+
+.filter-sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+
+.filter-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+
+.filter-sidebar::-webkit-scrollbar-thumb {
+  border-radius: 20px;
+
+  background: #d7d7d7;
+}
+
+
+/* =========================================================
+   FILTER HEADER
+========================================================= */
+
+.filter-sidebar-header {
+  display: flex;
+
+  align-items: flex-start;
+
+  justify-content: space-between;
+
+  gap: 10px;
+
+  padding-bottom: 20px;
+
+  margin-bottom: 20px;
+
+  border-bottom:
+    1px solid #eeeeee;
+}
+
+
+.filter-sidebar-header span {
+  color: #e52323;
+
+  font-size: 0.68rem;
+
+  font-weight: 900;
+
+  letter-spacing: 0.1em;
+}
+
+
+.filter-sidebar-header h2 {
+  margin: 5px 0 0;
+
+  color: #171717;
+
+  font-size: 1.25rem;
+
+  font-weight: 800;
+
+  letter-spacing: -0.03em;
+}
+
+
+.filter-sidebar-header button {
+  padding: 0;
+
+  border: none;
+
+  background: transparent;
+
+  color: #e52323;
+
+  font-family: inherit;
+
+  font-size: 0.7rem;
+
+  font-weight: 800;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+}
+
+
+.filter-sidebar-header button:hover {
+  text-decoration: underline;
+}
+
+
+/* =========================================================
+   FILTER ITEMS
+========================================================= */
+
+.filter-item {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 7px;
+
+  margin-bottom: 17px;
+}
+
+
+.filter-item label {
+  color: #484e55;
+
+  font-size: 0.74rem;
+
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   INPUT + SELECT
+========================================================= */
+
+.filter-item input,
+.filter-item select {
+  width: 100%;
+
+  height: 44px;
+
+  padding: 0 11px;
+
+  border: 1px solid #dfe2e5;
+
+  border-radius: 8px;
+
+  outline: none;
+
+  background: #ffffff;
+
+  color: #33383e;
+
+  font-family: inherit;
+
+  font-size: 0.76rem;
+
+  box-sizing: border-box;
+
+  transition:
+    border 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+.filter-item input::placeholder {
+  color: #999ea4;
+}
+
+
+.filter-item input:focus,
+.filter-item select:focus {
+  border-color: #e52323;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(229, 35, 35, 0.07);
+}
+
+
+/* =========================================================
+   APPLY FILTER
+========================================================= */
+
+.apply-filter-btn {
+  width: 100%;
+
+  height: 44px;
+
+  margin-top: 4px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background: #e52323;
+
+  color: #ffffff;
+
+  font-family: inherit;
+
+  font-size: 0.76rem;
+
+  font-weight: 850;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+.apply-filter-btn:hover {
+  background: #c91d1d;
+
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   ACTIVE FILTERS
+========================================================= */
+
+.active-filter-box {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 7px;
+
+  margin-top: 18px;
+
+  padding-top: 17px;
+
+  border-top:
+    1px solid #eeeeee;
+}
+
+
+.active-filter-box > span {
+  margin-bottom: 2px;
+
+  color: #e52323;
+
+  font-size: 0.64rem;
+
+  font-weight: 900;
+
+  letter-spacing: 0.08em;
+}
+
+
+.active-filter-box small {
+  display: inline-flex;
+
+  align-items: center;
+
+  padding: 7px 8px;
+
+  border-radius: 6px;
+
+  background: #fff3f3;
+
+  color: #b51e1e;
+
+  font-size: 0.68rem;
+
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   RESULTS
+========================================================= */
+
+.results-section {
+  min-width: 0;
+
+  height:
+    calc(100vh - var(--header-height) - 40px);
+
+  overflow-y: auto;
+
+  padding-right: 10px;
+
+  box-sizing: border-box;
+
+  scrollbar-width: thin;
+
+  scrollbar-color:
+    #cfcfcf
+    #f7f7f7;
+}
+
+
+.results-section::-webkit-scrollbar {
+  width: 8px;
+}
+
+
+.results-section::-webkit-scrollbar-track {
+  border-radius: 20px;
+
+  background: #f7f7f7;
+}
+
+
+.results-section::-webkit-scrollbar-thumb {
+  border-radius: 20px;
+
+  background: #cfcfcf;
+}
+
+
+.results-section::-webkit-scrollbar-thumb:hover {
+  background: #aaaaaa;
+}
+
+
+/* =========================================================
+   RESULTS HEADER
+========================================================= */
+
+.results-header {
+  display: flex;
+
+  align-items: flex-end;
+
+  justify-content: space-between;
+
+  gap: 20px;
+
+  margin-bottom: 20px;
+
+  padding-right: 5px;
+}
+
+
+.results-header > div:first-child > span {
+  color: #e52323;
+
+  font-size: 0.68rem;
+
+  font-weight: 900;
+
+  letter-spacing: 0.1em;
+}
+
+
+.results-header h2 {
+  margin: 5px 0 0;
+
+  color: #171717;
+
+  font-size: 1.5rem;
+
+  font-weight: 800;
+
+  letter-spacing: -0.03em;
+}
+
+
+/* =========================================================
+   RESULT VIEW
+========================================================= */
+
+.results-view {
+  display: flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  padding: 8px 13px;
+
+  border-radius: 999px;
+
+  background: #fff0f0;
+}
+
+
+.results-view span {
+  color: #888e94;
+
+  font-size: 0.67rem;
+}
+
+
+.results-view strong {
+  color: #e52323;
+
+  font-size: 0.7rem;
+
+  font-weight: 850;
+}
+
+
+/* =========================================================
+   CHILDREN GRID
+========================================================= */
+
+.children-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 18px;
+
+  padding-bottom: 25px;
+}
+
+
+/* =========================================================
+   CHILD CARD
+========================================================= */
+
+.child-card {
+  overflow: hidden;
+
+  border: 1px solid #e7e9ec;
+
+  border-radius: 17px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 5px 18px
+    rgba(0, 0, 0, 0.04);
+
+  transition:
+    transform 0.25s ease,
+    border 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+
+.child-card:hover {
+  transform: translateY(-5px);
+
+  border-color: #f0bcbc;
+
+  box-shadow:
+    0 15px 30px
+    rgba(0, 0, 0, 0.08);
+}
+
+
+/* =========================================================
+   CARD TOP
+========================================================= */
+
+.child-card-top {
+  display: flex;
+
+  align-items: flex-start;
+
+  justify-content: space-between;
+
+  gap: 10px;
+
+  padding: 20px 20px 10px;
+}
+
+
+/* =========================================================
+   CHILD PHOTO
+
+   IMPORTANT:
+   There is NO NAME inside this area.
+========================================================= */
+
+.child-photo-wrapper {
+  position: relative;
+
+  display: grid;
+
+  place-items: center;
+
+  width: 100px;
+
+  height: 100px;
+
+  overflow: hidden;
+
+  flex-shrink: 0;
+
+  border-radius: 14px;
+
+  background: #fff0f0;
+}
+
+
+.child-photo {
+  display: block;
+
+  width: 100%;
+
+  height: 100%;
+
+  object-fit: cover;
+
+  border-radius: 14px;
+}
+
+
+/* =========================================================
+   DEFAULT PHOTO FALLBACK
+
+   This is only an icon.
+   No child name is displayed.
+========================================================= */
+
+.child-photo-fallback {
+  position: absolute;
+
+  inset: 0;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 14px;
+
+  background: #fff0f0;
+
+  color: #e52323;
+
+  font-size: 2.3rem;
+
+  opacity: 0;
+
+  pointer-events: none;
+}
+
+
+.child-photo-fallback.show {
+  opacity: 1;
+}
+
+
+/* =========================================================
+   STATUS BADGE
+========================================================= */
+
+.status-badge {
+  padding: 7px 11px;
+
+  border-radius: 999px;
+
+  font-size: 0.66rem;
+
+  font-weight: 850;
+
+  white-space: nowrap;
+}
+
+
+.status-badge.missing {
+  background: #fff0f0;
+
+  color: #c52222;
+}
+
+
+.status-badge.reunited {
+  background: #eaf8f0;
+
+  color: #16824b;
+}
+
+
+/* =========================================================
+   CARD BODY
+========================================================= */
+
+.child-card-body {
+  padding: 10px 20px 20px;
+}
+
+
+/* =========================================================
+   CASE ID
+========================================================= */
+
+.case-id {
+  color: #e52323;
+
+  font-size: 0.66rem;
+
+  font-weight: 900;
+
+  letter-spacing: 0.08em;
+}
+
+
+/* =========================================================
+   CHILD NAME
+
+   The name is ONLY here.
+   It is NOT inside the photo.
+========================================================= */
+
+.child-card h3 {
+  margin: 8px 0 17px;
+
+  color: #171717;
+
+  font-size: 1.18rem;
+
+  font-weight: 800;
+
+  line-height: 1.3;
+}
+
+
+/* =========================================================
+   CHILD INFO
+========================================================= */
+
+.child-info {
+  display: grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap: 10px;
+
+  padding-bottom: 15px;
+
+  border-bottom:
+    1px solid #edf0f2;
+}
+
+
+.child-info div {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+
+.child-info small,
+.child-location small {
+  color: #92979d;
+
+  font-size: 0.67rem;
+}
+
+
+.child-info strong,
+.child-location strong {
+  color: #343a40;
+
+  font-size: 0.78rem;
+
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   LOCATION
+========================================================= */
+
+.child-location {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 15px 0;
+}
+
+
+.location-dot {
+  color: #e52323;
+
+  font-size: 0.68rem;
+}
+
+
+.child-location div {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 3px;
+
+  min-width: 0;
+}
+
+
+/* =========================================================
+   CARD FOOTER
+========================================================= */
+
+.card-footer {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 10px;
+
+  padding-top: 14px;
+
+  border-top:
+    1px solid #edf0f2;
+}
+
+
+.card-footer small {
+  color: #92979d;
+
+  font-size: 0.65rem;
+
+  line-height: 1.4;
+}
+
+
+.card-footer a {
+  flex-shrink: 0;
+
+  color: #e52323;
+
+  font-size: 0.73rem;
+
+  font-weight: 850;
+
+  text-decoration: none;
+}
+
+
+.card-footer a:hover {
+  text-decoration: underline;
+}
+
+
+/* =========================================================
+   NO RESULTS
+========================================================= */
+
+.no-results {
+  padding: 70px 20px;
+
+  border: 1px solid #e8eaed;
+
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  text-align: center;
+}
+
+
+.no-results-icon {
+  margin-bottom: 12px;
+
+  font-size: 2rem;
+}
+
+
+.no-results h3 {
+  margin: 0 0 7px;
+
+  color: #222222;
+
+  font-size: 1.1rem;
+}
+
+
+.no-results p {
+  margin: 0 0 18px;
+
+  color: #747a82;
+
+  font-size: 0.82rem;
+}
+
+
+.no-results button {
+  padding: 10px 17px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background: #e52323;
+
+  color: #ffffff;
+
+  font-family: inherit;
+
+  font-size: 0.75rem;
+
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+
+.no-results button:hover {
+  background: #c91d1d;
+}
+
+
+/* =========================================================
+   HELP SECTION
+========================================================= */
+
+.search-help {
+  padding: 45px 20px;
+
+  background: #fff7f7;
+}
+
+
+.search-help-box {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 25px;
+
+  padding: 28px;
+
+  border: 1px solid #f0d0d0;
+
+  border-radius: 18px;
+
+  background: #ffffff;
+}
+
+
+.search-help-box span {
+  color: #e52323;
+
+  font-size: 0.68rem;
+
+  font-weight: 900;
+
+  letter-spacing: 0.1em;
+}
+
+
+.search-help-box h2 {
+  margin: 6px 0;
+
+  color: #171717;
+
+  font-size: 1.25rem;
+
+  font-weight: 800;
+}
+
+
+.search-help-box p {
+  margin: 0;
+
+  color: #737980;
+
+  font-size: 0.8rem;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+@keyframes searchFadeUp {
+
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(25px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+
+}
+
+
+@keyframes searchFadeLeft {
+
+  from {
+    opacity: 0;
+
+    transform:
+      translateX(-30px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateX(0);
+  }
+
+}
+
+
+@keyframes searchFadeRight {
+
+  from {
+    opacity: 0;
+
+    transform:
+      translateX(30px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateX(0);
+  }
+
+}
+
+
+/* =========================================================
+   HERO ANIMATIONS
+========================================================= */
+
+.search-eyebrow {
+  animation:
+    searchFadeUp
+    0.7s
+    ease
+    both;
+}
+
+
+.search-hero h1 {
+  animation:
+    searchFadeUp
+    0.7s
+    ease
+    0.1s
+    both;
+}
+
+
+.search-hero p {
+  animation:
+    searchFadeUp
+    0.7s
+    ease
+    0.2s
+    both;
+}
+
+
+.hero-search-box {
+  animation:
+    searchFadeUp
+    0.7s
+    ease
+    0.3s
+    both;
+}
+
+
+.search-tabs {
+  animation:
+    searchFadeUp
+    0.7s
+    ease
+    0.4s
+    both;
+}
+
+
+.filter-sidebar {
+  animation:
+    searchFadeLeft
+    0.8s
+    ease
+    0.3s
+    both;
+}
+
+
+.results-header {
+  animation:
+    searchFadeRight
+    0.8s
+    ease
+    0.35s
+    both;
+}
+
+
+/* =========================================================
+   CARD ANIMATION
+========================================================= */
+
+.child-card {
+  opacity: 0;
+
+  animation:
+    searchFadeUp
+    0.6s
+    ease
+    forwards;
+}
+
+
+.child-card:nth-child(1) {
+  animation-delay: 0.45s;
+}
+
+
+.child-card:nth-child(2) {
+  animation-delay: 0.55s;
+}
+
+
+.child-card:nth-child(3) {
+  animation-delay: 0.65s;
+}
+
+
+.child-card:nth-child(4) {
+  animation-delay: 0.75s;
+}
+
+
+.child-card:nth-child(5) {
+  animation-delay: 0.85s;
+}
+
+
+.child-card:nth-child(6) {
+  animation-delay: 0.95s;
+}
+
+
+.child-card:nth-child(7) {
+  animation-delay: 1.05s;
+}
+
+
+.child-card:nth-child(8) {
+  animation-delay: 1.15s;
+}
+
+
+/* =========================================================
+   BUTTON EFFECTS
+========================================================= */
+
+.hero-search-box button,
+.apply-filter-btn,
+.no-results button {
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+.hero-search-box button:hover,
+.apply-filter-btn:hover,
+.no-results button:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 8px 18px
+    rgba(229, 35, 35, 0.2);
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 1000px) {
+
+  .search-layout {
+    grid-template-columns:
+      220px
+      minmax(0, 1fr);
+
+    gap: 20px;
+  }
+
+
+  .children-grid {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+
+  .search-hero {
+    padding:
+      40px 14px 24px;
+  }
+
+
+  .search-hero h1 {
+    font-size: 2.1rem;
+  }
+
+
+  .search-hero p {
+    font-size: 0.88rem;
+  }
+
+
+  .hero-search-box {
+    height: 54px;
+  }
+
+
+  .hero-search-box input {
+    padding: 0 15px;
+
+    font-size: 0.76rem;
+  }
+
+
+  .hero-search-box button {
+    width: 105px;
+
+    height: 44px;
+
+    font-size: 0.68rem;
+  }
+
+
+  .search-tabs {
+    justify-content: flex-start;
+
+    flex-wrap: nowrap;
+
+    overflow-x: auto;
+
+    padding-bottom: 5px;
+  }
+
+
+  .search-tabs button {
+    flex-shrink: 0;
+  }
+
+
+  .search-main {
+    padding:
+      30px 14px 55px;
+  }
+
+
+  .search-layout {
+    display: block;
+  }
+
+
+  .filter-sidebar {
+    position: static;
+
+    max-height: none;
+
+    overflow: visible;
+
+    margin-bottom: 30px;
+  }
+
+
+  .results-section {
+    height: auto;
+
+    max-height: none;
+
+    overflow: visible;
+
+    padding-right: 0;
+  }
+
+
+  .results-header {
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    gap: 10px;
+  }
+
+
+  .results-view {
+    align-self: flex-start;
+  }
+
+
+  .children-grid {
+    grid-template-columns: 1fr;
+  }
+
+
+  .search-help {
+    padding: 35px 14px;
+  }
+
+
+  .search-help-box {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 480px) {
+
+  .search-hero h1 {
+    font-size: 1.85rem;
+  }
+
+
+  .search-eyebrow {
+    font-size: 0.65rem;
+  }
+
+
+  .hero-search-box button {
+    width: 90px;
+
+    font-size: 0.66rem;
+  }
+
+
+  .filter-sidebar {
+    padding: 18px;
+  }
+
+
+  .filter-sidebar-header {
+    align-items: center;
+  }
+
+
+  .child-card-top {
+    padding:
+      17px 17px 9px;
+  }
+
+
+  .child-card-body {
+    padding:
+      9px 17px 17px;
+  }
+
+
+  .child-photo-wrapper {
+    width: 85px;
+
+    height: 85px;
+  }
+
+
+  .child-photo-fallback {
+    font-size: 2rem;
+  }
+
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .search-eyebrow,
+  .search-hero h1,
+  .search-hero p,
+  .hero-search-box,
+  .search-tabs,
+  .filter-sidebar,
+  .results-header,
+  .child-card {
+    animation: none;
+
+    opacity: 1;
+
+    transform: none;
+  }
+
+}
