@@ -1,0 +1,23 @@
+MCRN PROFILE / LOGOUT FIX V2
+
+Police profile behavior:
+- Clicking the police profile does NOT log the police user out.
+- /police-profile now opens a dedicated police profile page.
+- The profile page displays the logged-in police account details.
+- A visible Logout button is provided on the profile page.
+- Session data is removed only when the explicit Logout button is clicked.
+- Logout uses the same localStorage cleanup and /login redirect behavior as the user/auth profile.
+
+No police dashboard case/report functionality was intentionally changed.
+
+Admin integration: six authorized admin emails share the configured default password Admin@123; Administrator Access opens the supplied admin module at /admin/.
+
+
+FINAL INTEGRATION NOTES
+- Administrator Access from the main login/landing flow opens the supplied Admin module at /admin/.
+- Authorized Admin emails: lavanyatangellapalli167@gmail.com, rishitha823@gmail.com, sandhyadharavathu006@gmail.com, lakshmilikhitha61@gmail.com, osurimahendra1@gmail.com, sindhukanakapudi@gmail.com.
+- Shared default Admin password: Admin@123.
+- Admin management reads users/police from mcrn_auth, cases from missing_child_db, and user-owned cases from mcrn_db.
+- User sightings can be submitted with an optional case_id and are validated/resolved against missing_child_db.
+- Case deletion is coordinated across missing_child_db, mcrn_db, and reported_children with compensation on failure.
+- Admin supporting tables (case_assignments, notifications, audit_logs) are initialized automatically.

@@ -1,0 +1,270 @@
+/* =====================================================
+   17. RESPONSIVE — TABLET
+   ===================================================== */
+
+@media (max-width: 1050px) {
+  .nav-links {
+    gap: 0;
+  }
+
+  .nav-link {
+    padding-inline: 10px;
+  }
+
+  .module-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stat:nth-child(2) {
+    border-right: 0;
+  }
+
+  .stat:nth-child(-n+2) {
+    border-bottom: 1px solid rgba(255,255,255,.18);
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .search-panel {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .search-panel .btn {
+    width: 100%;
+  }
+}
+
+
+/* =====================================================
+   18. RESPONSIVE — MOBILE
+   ===================================================== */
+
+@media (max-width: 760px) {
+  :root {
+    --header-height: 68px;
+  }
+
+  .container {
+    width: min(calc(100% - 28px), var(--container));
+  }
+
+  .section {
+    padding: 58px 0;
+  }
+
+  .site-header {
+    height: var(--header-height);
+  }
+
+  .nav-links,
+  .nav-actions .btn {
+    display: none;
+  }
+
+  .mobile-menu-btn {
+    display: grid;
+  }
+
+  .nav {
+    position: relative;
+  }
+
+  .nav-links.mobile-open {
+    position: absolute;
+    top: calc(100% + 1px);
+    left: 0;
+    right: 0;
+    display: grid;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-top: 0;
+    border-radius: 0 0 16px 16px;
+    background: rgba(255,255,255,.98);
+    box-shadow: var(--shadow-md);
+    animation: riseIn 300ms var(--ease) both;
+  }
+
+  .nav-links.mobile-open .nav-link {
+    padding: 13px 14px;
+  }
+
+  .nav-links.mobile-open .nav-link::after {
+    display: none;
+  }
+
+  .hero {
+    min-height: auto;
+    padding: 58px 0 70px;
+  }
+
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 35px;
+  }
+
+  .hero-title {
+    font-size: clamp(2.3rem, 12vw, 3.4rem);
+  }
+
+  .hero-description {
+    font-size: .95rem;
+  }
+
+  .hero-visual {
+    min-height: 390px;
+  }
+
+  .hero-orb {
+    width: 310px;
+  }
+
+  .floating-card--one {
+    right: 0;
+  }
+
+  .floating-card--two {
+    left: 0;
+  }
+
+  .module-grid,
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat,
+  .stat:nth-child(2) {
+    border-right: 0;
+    border-bottom: 1px solid rgba(255,255,255,.18);
+  }
+
+  .stat:last-child {
+    border-bottom: 0;
+  }
+
+  .search-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .case-row {
+    grid-template-columns: 42px 1fr;
+  }
+
+  .case-row > .status {
+    grid-column: 2;
+  }
+
+  .emergency {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+  }
+}
+
+
+/* =====================================================
+   19. RESPONSIVE — SMALL MOBILE
+   ===================================================== */
+
+@media (max-width: 460px) {
+  .brand-copy {
+    display: none;
+  }
+
+  .hero-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .hero-actions .btn {
+    width: 100%;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .panel {
+    padding: 18px;
+  }
+
+  .hero-panel {
+    width: 92%;
+    padding: 20px;
+  }
+
+  .floating-card {
+    padding: 11px 13px;
+  }
+}
+
+
+/* =====================================================
+   20. ACCESSIBILITY — REDUCED MOTION
+   ===================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* =====================================================
+   21. MCRN GLOBAL OVERFLOW & MOBILE SAFEGUARDS
+   ===================================================== */
+html, body, #root { width: 100%; max-width: 100%; overflow-x: hidden; }
+img, video, canvas, svg { max-width: 100%; }
+button, input, select, textarea { max-width: 100%; }
+
+@media (max-width: 480px) {
+  .report-page { padding: 20px 8px 40px; }
+  .form-card { padding: 18px 12px; }
+  .field-row { gap: 12px; margin-bottom: 12px; }
+  .field-row .field,
+  .field-row .small-field,
+  .photo-field {
+    flex: 1 1 100% !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  .section-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .form-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .form-actions .btn {
+    width: 100%;
+  }
+}
+

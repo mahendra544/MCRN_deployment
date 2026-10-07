@@ -1,0 +1,36 @@
+/* MCRN project-wide responsive safeguards for the Police portal. */
+html, body, #root { width: 100%; max-width: 100%; overflow-x: hidden; }
+img, video, canvas, svg { max-width: 100%; }
+button, input, select, textarea { max-width: 100%; }
+
+@media (max-width: 1000px) {
+  .common-nav-links { display: none !important; }
+  .common-menu-button { display: flex !important; }
+  .common-mobile-menu { display: block !important; }
+  .common-navbar-container { width: calc(100% - 24px); gap: 10px; }
+  .dashboard-grid, .case-grid, .content-grid, .two-column { grid-template-columns: 1fr !important; }
+  .panel-grid, .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+
+@media (max-width: 760px) {
+  .common-navbar { height: 68px; }
+  .common-navbar-container { width: calc(100% - 16px); }
+  .common-page-content { padding-top: 68px; }
+  .common-profile-details, .common-profile-arrow { display: none !important; }
+  .common-mobile-menu { top: 68px !important; max-height: calc(100vh - 68px); overflow-y: auto; }
+  .police-dashboard, .dashboard-container, .page-content, .main-content { width: 100%; min-width: 0; }
+  .case-table-wrap, .table-container, .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { min-width: 620px; }
+  .search-panel, .filters, .filter-row, .form-grid { grid-template-columns: 1fr !important; }
+  .case-detail, .case-card, .panel, .modal { width: 100%; max-width: 100%; }
+  .actions, .button-row, .form-actions { flex-wrap: wrap; }
+}
+
+@media (max-width: 480px) {
+  .common-brand-text { display: none !important; }
+  .stats-grid, .panel-grid { grid-template-columns: 1fr !important; }
+  .page-title, .dashboard-header { flex-direction: column; align-items: flex-start !important; gap: 10px; }
+  .page-title h1, .dashboard-header h1 { font-size: 1.55rem; }
+  .actions > *, .button-row > *, .form-actions > * { width: 100%; }
+  .card, .panel, .case-card { padding: 14px !important; }
+}

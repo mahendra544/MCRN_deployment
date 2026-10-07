@@ -1,0 +1,32 @@
+/* MCRN responsive safeguards for authentication and landing pages. */
+html, body, #root { width: 100%; max-width: 100%; overflow-x: hidden; }
+img, video, canvas, svg { max-width: 100%; }
+
+@media (max-width: 900px) {
+  .container { width: calc(100% - 28px); }
+  .hero-grid { grid-template-columns: 1fr !important; }
+  .feature-grid, .module-grid, .info-grid, .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 760px) {
+  .nav-links, .nav-actions .btn { display: none !important; }
+  .mobile-menu-btn { display: grid !important; }
+  .hero-grid, .module-grid, .info-grid, .stats-grid, .story-grid { grid-template-columns: 1fr !important; }
+  .hero { min-height: auto; }
+  .hero-visual { min-height: 300px; }
+  .join-band { padding: 44px 22px; }
+  .quote-block { padding: 24px 20px 24px 30px; }
+  .footer-grid { grid-template-columns: 1fr 1fr !important; }
+  .auth-shell { width: 100%; min-height: 100vh; border-radius: 0; grid-template-columns: 1fr; }
+  .auth-aside { display: none; }
+  .auth-panel { padding: 30px 20px; }
+}
+@media (max-width: 480px) {
+  .container { width: calc(100% - 20px); }
+  .brand-copy { display: none; }
+  .hero-actions { display: grid; grid-template-columns: 1fr; }
+  .hero-actions .btn { width: 100%; }
+  .footer-grid { grid-template-columns: 1fr !important; }
+  .section { padding: 46px 0; }
+  .hero-title { font-size: clamp(2rem, 12vw, 3rem); }
+  .story-copy .story-stat { font-size: clamp(2rem, 12vw, 3rem); }
+}

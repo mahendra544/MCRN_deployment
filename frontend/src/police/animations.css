@@ -1,0 +1,415 @@
+/* =====================================================
+   POLICE DASHBOARD ANIMATIONS
+   ===================================================== */
+
+
+/* =====================================================
+   1. STAGGERED PAGE ENTRANCE
+   ===================================================== */
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.police-dashboard-page > * {
+  animation: fadeUp 0.5s ease both;
+}
+
+.police-dashboard-page > *:nth-child(1) {
+  animation-delay: 0.02s;
+}
+
+.police-dashboard-page > *:nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.police-dashboard-page > *:nth-child(3) {
+  animation-delay: 0.14s;
+}
+
+.police-dashboard-page > *:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+.police-dashboard-page > *:nth-child(5) {
+  animation-delay: 0.26s;
+}
+
+.police-dashboard-page > *:nth-child(6) {
+  animation-delay: 0.32s;
+}
+
+
+/* =====================================================
+   2. STAT CARDS — individually staggered
+   ===================================================== */
+
+@keyframes statIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.pd-stat {
+  animation: statIn 0.4s ease both;
+}
+
+.pd-stats-row .pd-stat:nth-child(1) {
+  animation-delay: 0.16s;
+}
+
+.pd-stats-row .pd-stat:nth-child(2) {
+  animation-delay: 0.22s;
+}
+
+.pd-stats-row .pd-stat:nth-child(3) {
+  animation-delay: 0.28s;
+}
+
+.pd-stats-row .pd-stat:nth-child(4) {
+  animation-delay: 0.34s;
+}
+
+
+/* =====================================================
+   3. CARD / ROW / PANEL HOVER
+   ===================================================== */
+
+.case-row,
+.pd-stat,
+.panel {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+
+/* =====================================================
+   4. SEARCH PANEL ENTRANCE
+   ===================================================== */
+
+@keyframes searchPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.search-panel {
+  animation: searchPanelIn 0.5s ease both;
+}
+
+
+/* =====================================================
+   5. SEARCH INPUT FOCUS
+   ===================================================== */
+
+.search-input-wrapper {
+  transition: transform 0.16s ease;
+}
+
+.search-input-wrapper:focus-within {
+  transform: translateY(-1px);
+}
+
+.search-input-icon {
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.search-input-wrapper:focus-within .search-input-icon {
+  transform: translateY(-50%) scale(1.08);
+}
+
+
+/* =====================================================
+   6. BUTTONS
+   ===================================================== */
+
+.btn {
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.btn-secondary:hover,
+.btn-ghost:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0) scale(0.97);
+}
+
+
+/* =====================================================
+   7. TABS
+   ===================================================== */
+
+.pd-tab {
+  transition: color 0.18s ease;
+}
+
+.pd-tab::after {
+  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.pd-tab .tab-count {
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.pd-tab:hover .tab-count {
+  transform: scale(1.08);
+}
+
+
+/* =====================================================
+   8. LIVE INDICATOR — pulsing ring
+   ===================================================== */
+
+@keyframes liveRing {
+  0% {
+    opacity: 0.6;
+    transform: scale(0.6);
+  }
+
+  70% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+
+
+/* =====================================================
+   9. NOTIFICATION BADGE — gentle attention pulse
+   ===================================================== */
+
+@keyframes notificationPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+.pd-notification-count {
+  animation: notificationPulse 2.4s ease-in-out infinite;
+}
+
+
+/* =====================================================
+   10. STATUS BADGE
+   ===================================================== */
+
+.status {
+  transition: transform 0.18s ease;
+}
+
+.status:hover {
+  transform: scale(1.05);
+}
+
+
+/* =====================================================
+   11. CASE DETAIL PANEL — responds to selection
+   ===================================================== */
+
+@keyframes detailAppear {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.case-detail-panel {
+  animation: detailAppear 0.35s ease both;
+}
+
+
+/* =====================================================
+   12. PROGRESS BAR — animated fill
+   ===================================================== */
+
+@keyframes progressFill {
+  from {
+    width: 0%;
+  }
+}
+
+.progress-value {
+  animation: progressFill 0.6s ease-out both;
+}
+
+
+/* =====================================================
+   13. EMPTY STATE
+   ===================================================== */
+
+@keyframes emptyStateIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.empty-sightings {
+  animation: emptyStateIn 0.45s ease both;
+}
+
+.empty-sightings .empty-icon {
+  display: inline-grid;
+  animation: iconFloat 2.6s ease-in-out infinite;
+}
+
+@keyframes iconFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+
+/* =====================================================
+   14. NAVBAR / PROFILE / BELL
+   ===================================================== */
+
+.pd-nav-link,
+.pd-profile,
+.pd-notification {
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.pd-nav-link:hover {
+  transform: translateY(-1px);
+}
+
+.pd-profile:hover {
+  transform: translateY(-1px);
+}
+
+.pd-notification:hover {
+  transform: scale(1.06);
+}
+
+.pd-nav-link::after {
+  transition: transform 0.2s ease;
+}
+
+
+/* =====================================================
+   15. INPUT FOCUS
+   ===================================================== */
+
+.input,
+.select {
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.18s ease;
+}
+
+.input:focus,
+.select:focus {
+  transform: translateY(-1px);
+}
+
+
+/* =====================================================
+   16. LOADING SHIMMER
+   Reserved for async loading states.
+   ===================================================== */
+
+@keyframes shimmer {
+  0% {
+    background-position: -600px 0;
+  }
+
+  100% {
+    background-position: 600px 0;
+  }
+}
+
+.loading-shimmer {
+  background:
+    linear-gradient(
+      90deg,
+      #f1f3f5 25%,
+      #fafafa 50%,
+      #f1f3f5 75%
+    );
+
+  background-size: 600px 100%;
+
+  animation: shimmer 1.5s infinite linear;
+}
+
+
+/* =====================================================
+   17. ACCESSIBILITY
+   Disable animations when reduced motion is requested.
+   ===================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

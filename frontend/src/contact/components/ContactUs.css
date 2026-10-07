@@ -1,0 +1,365 @@
+/* =========================================
+   CONTACT US PAGE
+   ========================================= */
+
+
+/* Reset */
+
+* {
+  box-sizing: border-box;
+}
+
+
+/* =========================================
+   PAGE BACKGROUND
+   ========================================= */
+
+.contact-page {
+  min-height: 100vh;
+
+  padding: 32px 20px;
+
+  background: #faf7f7;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  color: #111111;
+}
+
+
+/* =========================================
+   MAIN WHITE CARD
+   ========================================= */
+
+.contact-container {
+  width: 100%;
+
+  max-width: 700px;
+
+  margin: 0 auto;
+
+  padding: 34px 38px;
+
+  background: #ffffff;
+
+  border: 1px solid #dddddd;
+
+  border-radius: 14px;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+
+/* =========================================
+   HEADER
+   ========================================= */
+
+.contact-header {
+  text-align: center;
+
+  margin-bottom: 29px;
+}
+
+
+/* Project name */
+
+.project-name {
+  margin: 0 0 7px;
+
+  color: #e21b23;
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+  letter-spacing: 1.2px;
+}
+
+
+/* Contact Us heading */
+
+.contact-header h1 {
+  margin: 0 0 8px;
+
+  color: #111111;
+
+  font-size: 26px;
+
+  font-weight: 800;
+
+  line-height: 1.2;
+}
+
+
+/* Subtitle */
+
+.contact-subtitle {
+  margin: 0;
+
+  color: #666666;
+
+  font-size: 14px;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================
+   CONTACT CARDS
+   ========================================= */
+
+.contact-card {
+  display: flex;
+
+  align-items: center;
+
+  gap: 16px;
+
+  width: 100%;
+
+  min-height: 84px;
+
+  margin-bottom: 18px;
+
+  padding: 16px 20px;
+
+  background: #fff0f0;
+
+  border: 1px solid #f3caca;
+
+  border-radius: 9px;
+
+  transition: 0.2s ease;
+}
+
+
+/* Card hover */
+
+.contact-card:hover {
+  border-color: #e21b23;
+
+  box-shadow: 0 4px 12px rgba(226, 27, 35, 0.08);
+}
+
+
+/* =========================================
+   ROUND ICON
+   ========================================= */
+
+.contact-icon {
+  width: 46px;
+
+  height: 46px;
+
+  min-width: 46px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #e21b23;
+
+  color: white;
+
+  font-size: 21px;
+}
+
+
+/* =========================================
+   CONTACT INFORMATION
+   ========================================= */
+
+.contact-info {
+  flex: 1;
+
+  min-width: 0;
+}
+
+
+/* Label */
+
+.contact-label {
+  margin: 0 0 3px;
+
+  color: #444444;
+
+  font-size: 13px;
+}
+
+
+/* Phone / Email */
+
+.contact-info h2 {
+  margin: 0;
+
+  color: #111111;
+
+  font-size: 17px;
+
+  font-weight: 700;
+
+  line-height: 1.3;
+
+  word-break: break-word;
+}
+
+
+/* =========================================
+   COPY BUTTON
+   ========================================= */
+
+.copy-button {
+  padding: 6px 15px;
+
+  border: 1px solid #e21b23;
+
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  color: #e21b23;
+
+  font-size: 12px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+
+/* Copy button hover */
+
+.copy-button:hover {
+  background: #e21b23;
+
+  color: #ffffff;
+}
+
+
+/* =========================================
+   EMERGENCY CARD
+   ========================================= */
+
+.emergency-card {
+  width: 100%;
+
+  margin-top: 25px;
+
+  padding: 17px 20px;
+
+  border-radius: 9px;
+
+  background: #e21b23;
+
+  color: #ffffff;
+
+  text-align: center;
+}
+
+
+/* Emergency heading */
+
+.emergency-title {
+  margin: 0 0 5px;
+
+  font-size: 15px;
+
+  font-weight: 400;
+}
+
+
+/* Emergency number */
+
+.emergency-card h2 {
+  margin: 0 0 5px;
+
+  font-size: 23px;
+
+  font-weight: 800;
+}
+
+
+/* Emergency subtitle */
+
+.emergency-subtitle {
+  margin: 0;
+
+  font-size: 13px;
+
+  font-weight: 400;
+}
+
+
+/* =========================================
+   RESPONSIVE DESIGN
+   ========================================= */
+
+@media (max-width: 600px) {
+
+  .contact-page {
+    padding: 20px 12px;
+  }
+
+
+  .contact-container {
+    padding: 26px 18px;
+
+    border-radius: 12px;
+  }
+
+
+  .contact-header h1 {
+    font-size: 24px;
+  }
+
+
+  .contact-card {
+    gap: 12px;
+
+    padding: 14px;
+  }
+
+
+  .contact-icon {
+    width: 42px;
+
+    height: 42px;
+
+    min-width: 42px;
+
+    font-size: 19px;
+  }
+
+
+  .contact-info h2 {
+    font-size: 14px;
+  }
+
+
+  .contact-label {
+    font-size: 12px;
+  }
+
+
+  .copy-button {
+    padding: 5px 12px;
+
+    font-size: 11px;
+  }
+
+
+  .emergency-title {
+    font-size: 13px;
+  }
+
+
+  .emergency-card h2 {
+    font-size: 21px;
+  }
+}

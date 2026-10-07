@@ -1,0 +1,42 @@
+/* MCRN project-wide responsive safeguards for the User portal. */
+html, body, #root { width: 100%; max-width: 100%; overflow-x: hidden; }
+img, video, canvas, svg { max-width: 100%; }
+button, input, select, textarea { max-width: 100%; }
+
+@media (max-width: 900px) {
+  .common-navbar-container { width: calc(100% - 24px); gap: 10px; }
+  .common-nav-links { display: none !important; }
+  .common-menu-button { display: flex !important; }
+  .common-mobile-menu { display: block !important; }
+  .common-page-content { padding-top: 68px; }
+  .container, .page-container, .content-container { width: min(100% - 24px, 1240px); }
+  .dashboard-grid, .cards-grid, .content-grid, .two-column, .form-grid { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 700px) {
+  .common-navbar { height: 68px; }
+  .common-navbar-container { width: calc(100% - 16px); }
+  .common-brand-text { max-width: 145px; overflow: hidden; }
+  .common-brand-text strong, .common-brand-text span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .common-profile-details, .common-profile-arrow { display: none !important; }
+  .common-notification, .common-profile-avatar, .common-menu-button { flex: 0 0 38px; }
+  .common-mobile-menu { top: 68px !important; max-height: calc(100vh - 68px); overflow-y: auto; }
+  main, .main-content, .page-content { min-width: 0; max-width: 100%; }
+  .table-container, .table-wrapper, .responsive-table { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { max-width: none; }
+  .modal, .dialog, .popup, .card-modal { width: min(92vw, 620px) !important; max-width: 92vw !important; max-height: 90vh; overflow-y: auto; }
+  .form-actions, .actions, .button-row { flex-wrap: wrap; }
+  .form-actions button, .actions button, .button-row button { min-width: 0; }
+  input, select, textarea { min-width: 0 !important; width: 100%; }
+}
+
+@media (max-width: 480px) {
+  .common-brand-text { display: none !important; }
+  .section, .page-section { padding-inline: 0; }
+  .panel, .card, .form-card, .search-panel, .case-card { width: 100%; max-width: 100%; }
+  .stats-grid, .stat-grid { grid-template-columns: 1fr !important; }
+  .hero-actions, .action-row { flex-direction: column; align-items: stretch; }
+  .hero-actions > *, .action-row > * { width: 100%; }
+  h1 { font-size: clamp(1.8rem, 9vw, 2.5rem); }
+  h2 { font-size: clamp(1.45rem, 7vw, 2rem); }
+}

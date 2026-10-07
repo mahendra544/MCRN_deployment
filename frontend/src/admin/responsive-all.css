@@ -1,0 +1,42 @@
+/* MCRN project-wide responsive safeguards for the Admin portal. */
+html, body, #root { width: 100%; max-width: 100%; overflow-x: hidden; }
+img, video, canvas, svg { max-width: 100%; }
+button, input, select, textarea { max-width: 100%; }
+
+@media (max-width: 900px) {
+  .admin-common-nav-links, .admin-common-search-wrap { display: none !important; }
+  .admin-common-menu { display: block !important; }
+  .admin-common-mobile-menu { display: block !important; }
+  .admin-common-navbar-container { width: calc(100% - 24px); gap: 8px; }
+  .admin-common-profile-details, .admin-common-arrow { display: none !important; }
+  .admin-common-logout { display: none !important; }
+  .admin-main { width: min(100% - 24px, 1400px); margin: 0 auto; min-width: 0; overflow-x: hidden; }
+  .stats-grid, .dashboard-grid, .content-grid, .two-column, .form-grid { grid-template-columns: 1fr !important; }
+  .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+
+@media (max-width: 700px) {
+  .admin-common-navbar { height: 68px; }
+  .admin-common-navbar-container { width: calc(100% - 16px); }
+  .admin-common-mobile-menu { top: 68px !important; max-height: calc(100vh - 68px); overflow-y: auto; }
+  .admin-content { width: 100% !important; margin-left: 0 !important; padding-top: 68px; min-width: 0; }
+  .admin-main { width: calc(100% - 20px); padding: 16px 0 32px; }
+  .admin-main > * { max-width: 100%; min-width: 0; }
+  .admin-main table { min-width: 620px; }
+  .table-container, .table-wrapper, .case-table-wrap, .data-table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .dashboard-card, .table-card, .case-card, .admin-card, .panel, .section-card, .form-card { max-width: 100%; overflow-x: auto; }
+  .welcome-section, .page-title, .section-header { flex-direction: column !important; align-items: flex-start !important; gap: 10px; }
+  .search-row, .filters, .filter-row { grid-template-columns: 1fr !important; }
+  .actions, .button-row, .form-actions { flex-wrap: wrap; }
+}
+
+@media (max-width: 480px) {
+  .admin-common-brand-text { display: none !important; }
+  .admin-common-avatar { width: 35px; height: 35px; }
+  .stat-grid, .stats-grid { grid-template-columns: 1fr !important; }
+  .admin-main { width: calc(100% - 16px); padding-top: 14px; }
+  .admin-main h1 { font-size: clamp(1.5rem, 8vw, 2rem); }
+  .admin-main h2 { font-size: clamp(1.25rem, 7vw, 1.7rem); }
+  .actions > *, .button-row > *, .form-actions > * { width: 100%; min-width: 0; }
+  .modal, .dialog, .popup { width: 92vw !important; max-width: 92vw !important; max-height: 90vh; overflow-y: auto; }
+}
