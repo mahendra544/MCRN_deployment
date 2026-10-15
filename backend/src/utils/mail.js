@@ -1,26 +1,395 @@
-require("dotenv").config({ path: require("path").resolve(__dirname, "../../../.env") });
+const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, "../../../.env") });
+const nodeDns = require("node:dns");
+if (nodeDns && nodeDns.setDefaultResultOrder) {
+  nodeDns.setDefaultResultOrder("ipv4first");
+}
+const dns = nodeDns.promises;
 const nodemailer = require("nodemailer");
+
+let pool = null;
+try {
+  pool = require("../db");
+} catch (_) {}
+
+// In-memory caches to prevent repeated slow queries / DNS lookups
+const domainMxCache = new Map(); // domain -> { valid: boolean, errorType?: string, message?: string, expiresAt: number }
+const inMemorySuppressionCache = new Map(); // normalizedEmail -> { reason: string, errorType: string, timestamp: number }
+
+const MX_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+const SUPPRESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+// Fictitious / placeholder / reserved test domains that cannot receive real emails
+const KNOWN_PLACEHOLDER_DOMAINS = new Set([
+  "police.mcrn.org",
+  "mcrn.org",
+  "mcrn-test.org",
+  "testmcrn.org",
+  "example.com",
+  "example.org",
+  "example.net",
+  "test.com",
+  "invalid",
+  "localhost"
+]);
+
+function maskEmail(email) {
+  if (!email || typeof email !== "string") return "[invalid-recipient]";
+  const parts = email.trim().split("@");
+  if (parts.length !== 2) return "[malformed-recipient]";
+  const [local, domain] = parts;
+  if (local.length <= 2) {
+    return `*@${domain}`;
+  }
+  return `${local[0]}***${local[local.length - 1]}@${domain}`;
+}
+
+function isPlaceholderOrTestDomain(domain) {
+  if (!domain || typeof domain !== "string") return false;
+  const d = domain.trim().toLowerCase();
+  if (KNOWN_PLACEHOLDER_DOMAINS.has(d)) return true;
+  if (d.endsWith(".mcrn.org")) return true;
+  if (d.endsWith(".test") || d.endsWith(".example") || d.endsWith(".invalid") || d.endsWith(".localhost")) return true;
+  return false;
+}
+
+function isTestRecipient(email) {
+  if (!email || typeof email !== "string") return false;
+  const normalized = email.trim().toLowerCase();
+  const domain = normalized.split("@")[1] || "";
+
+  if (isPlaceholderOrTestDomain(domain)) return true;
+  if (/^test(_otp)?_/i.test(normalized)) return true;
+  if (/^officer(_[a-z0-9]+)*_\d+/i.test(normalized)) return true;
+  if (/^citizen(_[a-z0-9]+)*_\d+/i.test(normalized)) return true;
+  if (/^(user|test|mock)_\d+@/i.test(normalized)) return true;
+
+  return false;
+}
+
+function isTestEnvironment() {
+  return (
+    process.env.NODE_ENV === "test" ||
+    String(process.env.MCRN_DEV_OTP_MODE || "").toLowerCase() === "true" ||
+    String(process.env.TEST_MODE || "").toLowerCase() === "true"
+  );
+}
+
+// ----------------------------------------------------
+// PERMANENT FAILURE SUPPRESSION
+// ----------------------------------------------------
+
+async function isSuppressed(email) {
+  if (!email || typeof email !== "string") return false;
+  const normalized = email.trim().toLowerCase();
+
+  // 1. Check in-memory suppression
+  const cached = inMemorySuppressionCache.get(normalized);
+  if (cached) {
+    if (cached.cleared) return false;
+    if (Date.now() - cached.timestamp < SUPPRESSION_TTL_MS) {
+      return cached;
+    }
+    inMemorySuppressionCache.delete(normalized);
+  }
+
+  // 2. Check DB suppression table if available
+  if (pool && typeof pool.query === "function") {
+    try {
+      const [rows] = await pool.query(
+        "SELECT reason, failure_type, suppressed_at FROM email_suppressions WHERE email = ? AND suppressed_at > NOW() - INTERVAL '24 HOUR' LIMIT 1",
+        [normalized]
+      );
+      const row = Array.isArray(rows) ? rows[0] : rows;
+      if (row) {
+        const result = {
+          reason: row.reason,
+          errorType: row.failure_type,
+          timestamp: new Date(row.suppressed_at).getTime()
+        };
+        inMemorySuppressionCache.set(normalized, result);
+        return result;
+      }
+    } catch (_) {}
+  }
+
+  return false;
+}
+
+async function recordPermanentFailure(email, reason, errorType = "PERMANENT_DELIVERY_FAILURE") {
+  if (!email || typeof email !== "string") return;
+  const normalized = email.trim().toLowerCase();
+
+  inMemorySuppressionCache.set(normalized, {
+    reason,
+    errorType,
+    timestamp: Date.now()
+  });
+
+  if (pool && typeof pool.query === "function") {
+    try {
+      await pool.query(
+        `INSERT INTO email_suppressions (email, reason, failure_type, suppressed_at)
+         VALUES (?, ?, ?, NOW())
+         ON CONFLICT (email) DO UPDATE SET reason = EXCLUDED.reason, failure_type = EXCLUDED.failure_type, suppressed_at = NOW()`,
+        [normalized, reason, errorType]
+      );
+    } catch (_) {}
+  }
+}
+
+function clearSuppression(email) {
+  if (!email || typeof email !== "string") return;
+  const normalized = email.trim().toLowerCase();
+  inMemorySuppressionCache.set(normalized, { cleared: true, timestamp: Date.now() });
+  if (pool && typeof pool.query === "function") {
+    return pool.query("DELETE FROM email_suppressions WHERE email = ?", [normalized])
+      .then(() => {
+        const current = inMemorySuppressionCache.get(normalized);
+        if (current && current.cleared) {
+          inMemorySuppressionCache.delete(normalized);
+        }
+      })
+      .catch(() => {});
+  }
+}
+
+// ----------------------------------------------------
+// DOMAIN DELIVERABILITY & DNS MX VERIFICATION
+// ----------------------------------------------------
+
+async function checkDomainDeliverability(domain) {
+  if (!domain || typeof domain !== "string") {
+    return { deliverable: false, errorType: "INVALID_DOMAIN", message: "Domain name is missing or invalid." };
+  }
+  const d = domain.trim().toLowerCase();
+
+  const cached = domainMxCache.get(d);
+  if (cached && Date.now() < cached.expiresAt) {
+    return cached;
+  }
+
+  // Placeholder / internal test domain check
+  if (isPlaceholderOrTestDomain(d)) {
+    const res = {
+      deliverable: false,
+      errorType: "RESERVED_PLACEHOLDER_DOMAIN",
+      message: `Domain "${d}" is a reserved placeholder domain and cannot receive external email.`,
+      expiresAt: Date.now() + MX_CACHE_TTL_MS
+    };
+    domainMxCache.set(d, res);
+    return res;
+  }
+
+  let timer;
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      const err = new Error("DNS MX lookup timed out");
+      err.code = "ETIMEOUT";
+      reject(err);
+    }, 4500);
+  });
+
+  try {
+    const mxRecords = await Promise.race([dns.resolveMx(d), timeoutPromise]);
+    clearTimeout(timer);
+
+    // Check for RFC 7505 Null MX record (single record with exchange = "")
+    if (Array.isArray(mxRecords) && mxRecords.length === 1 && (!mxRecords[0].exchange || mxRecords[0].exchange.trim() === "")) {
+      const res = {
+        deliverable: false,
+        errorType: "NULL_MX_RECORD",
+        message: `Domain "${d}" explicitly rejects email (RFC 7505 Null MX record).`,
+        expiresAt: Date.now() + MX_CACHE_TTL_MS
+      };
+      domainMxCache.set(d, res);
+      return res;
+    }
+
+    if (Array.isArray(mxRecords) && mxRecords.length > 0) {
+      const res = { deliverable: true, expiresAt: Date.now() + MX_CACHE_TTL_MS };
+      domainMxCache.set(d, res);
+      return res;
+    }
+
+    // Fallback A record check per RFC 5321
+    try {
+      const aRecords = await dns.resolve4(d);
+      if (Array.isArray(aRecords) && aRecords.length > 0) {
+        const res = { deliverable: true, expiresAt: Date.now() + MX_CACHE_TTL_MS };
+        domainMxCache.set(d, res);
+        return res;
+      }
+    } catch (_) {}
+
+    const res = {
+      deliverable: false,
+      errorType: "NO_MX_RECORDS",
+      message: `Domain "${d}" has no mail exchange (MX) or address records.`,
+      expiresAt: Date.now() + MX_CACHE_TTL_MS
+    };
+    domainMxCache.set(d, res);
+    return res;
+  } catch (err) {
+    clearTimeout(timer);
+    let errorType = "DNS_ERROR";
+    let message = `DNS lookup failed for domain "${d}".`;
+
+    if (err.code === "ENODATA") {
+      try {
+        const aRecords = await dns.resolve4(d);
+        if (Array.isArray(aRecords) && aRecords.length > 0) {
+          const res = { deliverable: true, expiresAt: Date.now() + MX_CACHE_TTL_MS };
+          domainMxCache.set(d, res);
+          return res;
+        }
+      } catch (_) {}
+      errorType = "NO_MX_RECORDS";
+      message = `Domain "${d}" has no mail exchange (MX) records.`;
+    } else if (err.code === "ENOTFOUND") {
+      errorType = "DOMAIN_NOT_FOUND";
+      message = `Recipient domain "${d}" does not exist.`;
+    } else if (err.code === "ETIMEOUT") {
+      errorType = "DNS_TIMEOUT";
+      message = `DNS resolution for domain "${d}" timed out.`;
+    }
+
+    const res = {
+      deliverable: false,
+      errorType,
+      message,
+      expiresAt: Date.now() + (errorType === "DNS_TIMEOUT" ? 60000 : MX_CACHE_TTL_MS)
+    };
+    domainMxCache.set(d, res);
+    return res;
+  }
+}
+
+// ----------------------------------------------------
+// RECIPIENT VALIDATION
+// ----------------------------------------------------
+
+async function validateRecipientEmail(rawEmail, { isTestContext = false } = {}) {
+  if (!rawEmail || typeof rawEmail !== "string") {
+    return {
+      valid: false,
+      errorType: "MISSING_RECIPIENT",
+      message: "Recipient email address is required and cannot be empty."
+    };
+  }
+
+  const email = rawEmail.trim().toLowerCase();
+
+  // Ensure it is not a username, badge ID, or identifier without '@'
+  if (!email.includes("@")) {
+    return {
+      valid: false,
+      errorType: "NOT_AN_EMAIL",
+      message: `Recipient "${email}" is an internal identifier or username, not a valid email address.`
+    };
+  }
+
+  // Basic RFC 5322 email regex check
+  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+  if (!emailRegex.test(email) || email.length > 254) {
+    return {
+      valid: false,
+      errorType: "INVALID_EMAIL_FORMAT",
+      message: "Recipient email format is invalid."
+    };
+  }
+
+  const domain = email.split("@")[1];
+
+  // Check permanent suppression
+  const suppression = await isSuppressed(email);
+  if (suppression) {
+    return {
+      valid: false,
+      isSuppressed: true,
+      errorType: "PERMANENT_FAILURE_SUPPRESSED",
+      message: `Delivery to this address has previously failed permanently (${suppression.reason}). Delivery is suppressed.`
+    };
+  }
+
+  // Check if this is a test recipient or running in test/dev mode
+  const testRecipient = isTestRecipient(email);
+  const isProd = process.env.NODE_ENV === "production" && String(process.env.CLOUD_MODE || "").toLowerCase() === "true";
+  const testEnv = isTestEnvironment() || isTestContext || !isProd;
+
+  if (testRecipient && (testEnv || Boolean(process.env.TEST_EMAIL_RECIPIENT))) {
+    return {
+      valid: true,
+      email,
+      domain,
+      isTestIsolated: true
+    };
+  }
+
+  if (isPlaceholderOrTestDomain(domain)) {
+    return {
+      valid: false,
+      errorType: "PLACEHOLDER_DOMAIN",
+      message: `Domain "${domain}" is a placeholder domain and cannot receive real emails.`
+    };
+  }
+
+  // Perform DNS MX deliverability check for live recipients
+  const domainCheck = await checkDomainDeliverability(domain);
+  if (!domainCheck.deliverable) {
+    await recordPermanentFailure(email, domainCheck.message, domainCheck.errorType);
+    return {
+      valid: false,
+      errorType: domainCheck.errorType,
+      message: domainCheck.message
+    };
+  }
+
+  return {
+    valid: true,
+    email,
+    domain,
+    isTestIsolated: false
+  };
+}
+
+// ----------------------------------------------------
+// SMTP TRANSPORTER CONFIGURATION
+// ----------------------------------------------------
 
 let transporter = null;
 
 function createTransporter() {
-  const user = process.env.MAIL_USERNAME || process.env.MAIL_USER || process.env.EMAIL_USER;
-  const pass = process.env.MAIL_PASSWORD || process.env.EMAIL_PASS;
+  const user = (process.env.MAIL_USERNAME || process.env.MAIL_USER || process.env.EMAIL_USER || "").trim();
+  const pass = (process.env.MAIL_PASSWORD || process.env.EMAIL_PASS || "").trim().replace(/\s+/g, "");
 
   if (!user || !pass) {
     return null;
   }
 
+  const host = process.env.MAIL_HOST || process.env.SMTP_HOST || "smtp.gmail.com";
+  const port = Number(process.env.MAIL_PORT || process.env.SMTP_PORT || 587);
+
+  // If port is 465, secure is true by default; for 587/25, STARTTLS (requireTLS) is standard
+  const secureEnv = process.env.MAIL_SECURE || process.env.SMTP_SECURE;
+  const secure = secureEnv !== undefined
+    ? String(secureEnv).toLowerCase() === "true"
+    : port === 465;
+
   return nodemailer.createTransport({
-    host: process.env.MAIL_HOST || process.env.SMTP_HOST || "smtp.gmail.com",
-    port: Number(process.env.MAIL_PORT || process.env.SMTP_PORT || 587),
-    secure: String(process.env.MAIL_SECURE || process.env.SMTP_SECURE || "false").toLowerCase() === "true",
-    requireTLS: true,
+    host,
+    port,
+    secure,
+    requireTLS: !secure,
     auth: { user, pass },
+    family: 4,
     connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 20000,
+    dnsTimeout: 10000,
     tls: {
       minVersion: "TLSv1.2",
-      servername: process.env.MAIL_HOST || process.env.SMTP_HOST || "smtp.gmail.com"
+      servername: host
     }
   });
 }
@@ -29,18 +398,80 @@ async function verifyMailer() {
   try {
     transporter = createTransporter();
     if (!transporter) {
-      console.log("ℹ️ Mailer not configured with credentials (skipping verification).");
-      return;
+      console.log("ℹ️ Mailer not configured with credentials (skipping SMTP verification).");
+      return false;
     }
     console.log("Testing SMTP connection...");
     await transporter.verify();
     console.log("✅ SMTP connection verified successfully.");
+    return true;
   } catch (err) {
-    console.warn("⚠️ SMTP verification warning:", err.message);
+    const safeError = categorizeSmtpError(err);
+    console.warn(`⚠️ SMTP verification notice [${safeError.category}]:`, safeError.safeMessage);
+    return false;
   }
 }
 
-function html(title, otp, copy) {
+function categorizeSmtpError(err) {
+  if (!err) return { category: "UNKNOWN", safeMessage: "Unknown mail error" };
+
+  const msg = err.message || "";
+  const code = err.code || "";
+  const responseCode = err.responseCode || 0;
+
+  // Authentication error
+  if (code === "EAUTH" || responseCode === 535 || /invalid login|bad credentials|authentication failed/i.test(msg)) {
+    return {
+      category: "SMTP_AUTH_ERROR",
+      safeMessage: "SMTP authentication failed. Verify username and application password."
+    };
+  }
+
+  // Recipient mailbox error (550, 551, 553, 554)
+  if (responseCode >= 550 && responseCode <= 554) {
+    return {
+      category: "RECIPIENT_MAILBOX_ERROR",
+      isPermanent: true,
+      safeMessage: `Recipient mailbox rejected by destination mail server (code ${responseCode}).`
+    };
+  }
+
+  // Recipient server temporary timeout / throttling (421, 450, 451, 452)
+  if (responseCode >= 420 && responseCode <= 459) {
+    return {
+      category: "RECIPIENT_SERVER_TIMEOUT",
+      isPermanent: false,
+      safeMessage: `Recipient mail server temporarily timed out or throttled connection (code ${responseCode}).`
+    };
+  }
+
+  // SMTP connection failure
+  if (code === "ETIMEDOUT" || code === "ECONNREFUSED" || code === "ECONNRESET" || code === "ESOCKET") {
+    return {
+      category: "SMTP_CONNECTION_ERROR",
+      safeMessage: `Could not establish connection to SMTP server (${code}).`
+    };
+  }
+
+  // DNS failure to SMTP host
+  if (code === "EDNS" || (code === "ENOTFOUND" && /smtp/i.test(msg))) {
+    return {
+      category: "SMTP_HOST_DNS_ERROR",
+      safeMessage: "SMTP hostname could not be resolved in DNS."
+    };
+  }
+
+  return {
+    category: "MAIL_DELIVERY_ERROR",
+    safeMessage: "Mail delivery could not be completed."
+  };
+}
+
+// ----------------------------------------------------
+// EMAIL HTML TEMPLATES
+// ----------------------------------------------------
+
+function htmlOtp(title, otp, copy) {
   return `<!doctype html>
 <html>
 <body style="margin:0;background:#080b12;color:#eef2ff;font-family:Arial,sans-serif">
@@ -57,37 +488,213 @@ function html(title, otp, copy) {
 </html>`;
 }
 
-async function sendOtp(to, otp, purpose) {
-  console.log("[EMAIL] OTP send started");
+// ----------------------------------------------------
+// CORE SAFE MAIL SENDER
+// ----------------------------------------------------
+
+async function sendMailSafe({ to, subject, html, text, from, isTestContext = false, purpose = "GENERAL" }) {
+  // 1. Validate recipient
+  const validation = await validateRecipientEmail(to, { isTestContext });
+  if (!validation.valid) {
+    console.warn(`[EMAIL] Delivery rejected for ${maskEmail(to)}: [${validation.errorType}] ${validation.message}`);
+    const err = new Error(validation.message);
+    err.code = validation.errorType;
+    err.status = validation.isSuppressed ? 409 : 400;
+    throw err;
+  }
+
+  // 2. Handle isolated development / test mode
+  if (validation.isTestIsolated) {
+    const testRecipientOverride = (process.env.TEST_EMAIL_RECIPIENT || "").trim();
+
+    if (testRecipientOverride && testRecipientOverride.includes("@")) {
+      console.log(`[EMAIL_TEST_REDIRECT] Redirecting test email for ${maskEmail(to)} to real inbox ${maskEmail(testRecipientOverride)}`);
+      // Recursively send to real test recipient with explicit subject tag
+      return sendMailSafe({
+        to: testRecipientOverride,
+        subject: `[TEST FOR ${maskEmail(to)}] ${subject}`,
+        html,
+        text,
+        from,
+        isTestContext: false,
+        purpose
+      });
+    }
+
+    // Isolated in-memory dev mode (no remote SMTP call)
+    console.log(`[EMAIL_DEV_ISOLATED] Test address ${maskEmail(to)} handled in isolated development mode. Remote SMTP suppressed.`);
+    return {
+      accepted: true,
+      status: "ISOLATED_DEV_SIMULATED",
+      recipient: maskEmail(to),
+      purpose
+    };
+  }
+
+  // 3. Remote SMTP delivery for real deliverable recipient
   if (!transporter) {
     transporter = createTransporter();
   }
   if (!transporter) {
-    console.warn("[EMAIL] Mailer not configured with credentials (skipping remote delivery).");
-    return;
+    console.warn("[EMAIL] Mailer credentials not configured (skipping remote delivery).");
+    return {
+      accepted: false,
+      status: "UNCONFIGURED",
+      recipient: maskEmail(to)
+    };
   }
+
+  const senderUser = (process.env.MAIL_USERNAME || process.env.MAIL_USER || process.env.EMAIL_USER || "").trim();
+  const defaultFrom = senderUser
+    ? `"Missing Child Rescue Network" <${senderUser}>`
+    : "MCRN Security <no-reply@mcrn.org>";
+  const resolvedFrom = from || process.env.MAIL_FROM || defaultFrom;
+
+  try {
+    const info = await transporter.sendMail({
+      from: resolvedFrom,
+      to: validation.email,
+      subject,
+      text: text || undefined,
+      html: html || undefined
+    });
+
+    console.log(`[EMAIL] Dispatched to SMTP gateway (status: ACCEPTED_FOR_DELIVERY, messageId: ${info.messageId || "unknown"})`);
+    return {
+      accepted: true,
+      status: "ACCEPTED_BY_SMTP_RELAY",
+      messageId: info.messageId,
+      recipient: maskEmail(to)
+    };
+  } catch (err) {
+    const safeError = categorizeSmtpError(err);
+    console.error(`[EMAIL] Dispatch failed for ${maskEmail(to)} [${safeError.category}]: ${safeError.safeMessage}`);
+
+    if (safeError.isPermanent) {
+      await recordPermanentFailure(to, safeError.safeMessage, safeError.category);
+    }
+
+    const dispatchError = new Error(safeError.safeMessage);
+    dispatchError.code = safeError.category;
+    dispatchError.status = safeError.category === "RECIPIENT_MAILBOX_ERROR" ? 400 : 503;
+    throw dispatchError;
+  }
+}
+
+// ----------------------------------------------------
+// PUBLIC HELPERS
+// ----------------------------------------------------
+
+async function sendOtp(to, otp, purpose, options = {}) {
   const isReset = purpose === "PASSWORD_RESET";
   const title = isReset ? "Reset Your Password" : "Verify Your Account";
   const copy = isReset
     ? "Use the verification code below to complete your password reset request:"
     : "Welcome to MCRN. Use the verification code below to verify your email address:";
 
-  try {
-    await transporter.sendMail({
-      from: process.env.MAIL_FROM || process.env.EMAIL_USER || "MCRN Security <no-reply@mcrn.org>",
-      to,
-      subject: `[MCRN] ${title} - ${otp}`,
-      html: html(title, otp, copy)
-    });
-    console.log("[EMAIL] OTP send succeeded");
-  } catch (err) {
-    console.error("[EMAIL] OTP send failed:", err.message);
-    throw new Error(`Failed to dispatch verification email: ${err.message}`);
+  return sendMailSafe({
+    to,
+    subject: `[MCRN] ${title} - ${otp}`,
+    html: htmlOtp(title, otp, copy),
+    text: `${title}\n\n${copy}\n\nVerification Code: ${otp}\n\nValid for 10 minutes. Never share this code.`,
+    isTestContext: options.isTestContext || isTestRecipient(to),
+    purpose
+  });
+}
+
+async function sendAdminPasswordReset(to, resetLink) {
+  const subject = "Reset Your Admin Portal Password";
+  const text = `Hello,\n\nYou requested to reset your Admin Portal password.\n\nClick the link below to create a new password:\n${resetLink}\n\nThis link will expire in 15 minutes.\n\nIf you did not request this password reset, you can ignore this email.\n\nMissing Child Rescue Network`;
+  const html = `<!doctype html>
+<html>
+<body style="margin:0;background:#080b12;color:#eef2ff;font-family:Arial,sans-serif">
+<div style="max-width:560px;margin:40px auto;padding:32px;background:#111827;border:1px solid #283449;border-radius:24px">
+<div style="color:#e85d4f;font-weight:700;letter-spacing:2px;font-size:12px">MCRN • ADMIN PORTAL</div>
+<h1 style="font-size:24px">Reset Your Admin Password</h1>
+<p style="color:#aab4c6">You requested to reset your Admin Portal password. Click the button below:</p>
+<div style="margin:24px 0;text-align:center">
+  <a href="${resetLink}" style="display:inline-block;padding:12px 28px;background:#e85d4f;color:#ffffff;text-decoration:none;border-radius:12px;font-weight:bold">Reset Password</a>
+</div>
+<p style="color:#7d899d;font-size:12px">Link: ${resetLink}</p>
+<p style="color:#7d899d;font-size:12px">This link expires in 15 minutes.</p>
+</div>
+</body>
+</html>`;
+
+  return sendMailSafe({
+    to,
+    subject,
+    text,
+    html,
+    purpose: "ADMIN_PASSWORD_RESET"
+  });
+}
+
+async function sendPoliceNotification({ officerId, officerEmail, subject, text, html }) {
+  let recipient = officerEmail;
+
+  // If officerEmail was provided but is an identifier without @, reject immediately with clear error
+  if (recipient && typeof recipient === "string" && !recipient.includes("@")) {
+    const err = new Error(`Recipient "${recipient}" is an internal identifier or username, not a valid email address.`);
+    err.code = "NOT_AN_EMAIL";
+    err.status = 400;
+    throw err;
   }
+
+  // If only officerId is provided (or recipient is not set), look up the officer's verified email from database
+  if (!recipient && officerId && pool && typeof pool.query === "function") {
+    try {
+      const [rows] = await pool.query(
+        "SELECT email FROM users WHERE id = ? AND role = 'POLICE' AND verified = true LIMIT 1",
+        [officerId]
+      );
+      const row = Array.isArray(rows) ? rows[0] : rows;
+      if (row && row.email && row.email.includes("@")) {
+        const domain = row.email.split("@")[1];
+        if (!isPlaceholderOrTestDomain(domain)) {
+          recipient = row.email;
+        }
+      }
+    } catch (_) {}
+  }
+
+  // Fallback to configured police notification email if recipient is missing or placeholder
+  if (!recipient || (recipient.includes("@") && isPlaceholderOrTestDomain(recipient.split("@")[1]))) {
+    const fallback = (process.env.POLICE_NOTIFICATION_EMAIL || "").trim();
+    if (fallback && fallback.includes("@")) {
+      recipient = fallback;
+    }
+  }
+
+  if (!recipient || !recipient.includes("@")) {
+    const err = new Error("No valid deliverable email address configured for police notifications.");
+    err.code = "NO_POLICE_RECIPIENT";
+    err.status = 400;
+    throw err;
+  }
+
+  return sendMailSafe({
+    to: recipient,
+    subject: `[MCRN Police Alert] ${subject}`,
+    text,
+    html,
+    purpose: "POLICE_NOTIFICATION"
+  });
 }
 
 module.exports = {
   createTransporter,
   verifyMailer,
-  sendOtp
+  sendOtp,
+  sendMailSafe,
+  sendAdminPasswordReset,
+  sendPoliceNotification,
+  validateRecipientEmail,
+  checkDomainDeliverability,
+  isPlaceholderOrTestDomain,
+  isTestRecipient,
+  maskEmail,
+  isSuppressed,
+  recordPermanentFailure,
+  clearSuppression
 };

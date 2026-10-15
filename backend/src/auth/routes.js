@@ -5,7 +5,7 @@ const { randomInt } = require("crypto");
 const { z } = require("zod");
 const rateLimit = require("express-rate-limit");
 const pool = require("../db");
-const { sendOtp } = require("../utils/mail");
+const { sendOtp, validateRecipientEmail } = require("../utils/mail");
 const { requireAuth } = require("../middleware");
 
 const router = express.Router();
@@ -153,6 +153,10 @@ router.use(authLimiter);
 router.post("/register/user", parse(schemas.user), async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
+    const emailValidation = await validateRecipientEmail(email);
+    if (!emailValidation.valid) {
+      return res.status(400).json({ message: emailValidation.message });
+    }
     const hash = await bcrypt.hash(password, 12);
     const conn = await pool.getConnection();
     let id;
@@ -185,6 +189,10 @@ router.post("/register/user", parse(schemas.user), async (req, res, next) => {
 router.post("/register/police", parse(schemas.police), async (req, res, next) => {
   try {
     const { name, username, email, password, officialId } = req.body;
+    const emailValidation = await validateRecipientEmail(email);
+    if (!emailValidation.valid) {
+      return res.status(400).json({ message: emailValidation.message });
+    }
     const hash = await bcrypt.hash(password, 12);
     const conn = await pool.getConnection();
     let id;
@@ -338,6 +346,9 @@ router.post("/resend-otp", parse(schemas.resend), async (req, res, next) => {
     if (req.body.purpose === "REGISTRATION_VERIFICATION" && u.verified) {
       return res.status(400).json({ message: "This email is already verified" });
     }
+    if (req.body.purpose === "PASSWORD_RESET" && !u.verified) {
+      return res.status(400).json({ message: "Password reset is only available for verified accounts." });
+    }
     await issueOtp(req.body.email, req.body.purpose);
     res.json({ message: "A new verification code has been sent." });
   } catch (e) {
@@ -347,9 +358,11 @@ router.post("/resend-otp", parse(schemas.resend), async (req, res, next) => {
 
 router.post("/forgot-password", parse(schemas.forgot), async (req, res, next) => {
   try {
-    const [rows] = await pool.query("SELECT email FROM users WHERE email=?", [req.body.email]);
+    const [rows] = await pool.query("SELECT email, verified FROM users WHERE email=? LIMIT 1", [req.body.email]);
     const u = Array.isArray(rows) ? rows[0] : rows;
-    if (u) await issueOtp(u.email, "PASSWORD_RESET");
+    if (u && u.verified) {
+      await issueOtp(u.email, "PASSWORD_RESET");
+    }
     res.json({ message: "If an account exists for that email, a password reset code has been sent." });
   } catch (e) {
     next(e);

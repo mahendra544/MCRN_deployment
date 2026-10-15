@@ -99,44 +99,12 @@ const ADMIN_DETAILS = {
 // EMAIL CONFIGURATION
 // =====================================================
 
-const EMAIL_USER = (process.env.EMAIL_USER || "").trim();
-const EMAIL_PASS = (process.env.EMAIL_PASS || "").replace(/\s+/g, "");
-const emailConfigured = Boolean(EMAIL_USER && EMAIL_PASS);
-
-const transporter = emailConfigured
-    ? nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 587,
-        secure: false,
-        requireTLS: true,
-        auth: {
-            user: EMAIL_USER,
-            pass: EMAIL_PASS
-        },
-        family: 4,
-        connectionTimeout: 30000,
-        greetingTimeout: 30000,
-        socketTimeout: 30000,
-        dnsTimeout: 30000,
-        tls: {
-            minVersion: "TLSv1.2",
-            servername: "smtp.gmail.com"
-        },
-        lookup: (hostname, options, callback) => {
-            dns.lookup(hostname, { family: 4 }, callback);
-        }
-    })
-    : null;
+const { sendAdminPasswordReset, sendPoliceNotification, maskEmail, createTransporter } = require("../../utils/mail");
+const transporter = createTransporter();
 if (transporter) {
-    transporter.verify((error) => {
-        if (error) {
-            console.error("❌ Email configuration error:", error.message);
-        } else {
-            console.log("✅ Email server is ready");
-        }
-    });
+    console.log("✅ Admin email module configured and connected to shared mail utility");
 } else {
-    console.log("ℹ️ Admin email delivery is disabled. Set EMAIL_USER and EMAIL_PASS to enable it.");
+    console.log("ℹ️ Admin email delivery is disabled. Set MAIL_USERNAME/MAIL_PASSWORD or EMAIL_USER/EMAIL_PASS to enable it.");
 }
 
 // =====================================================
@@ -714,15 +682,17 @@ app.post("/api/admin/cases/:id/assign", requireAdmin, (req, res) => {
                             }
 
                             res.json({
-
                                 success: true,
+                                message: "Case assigned successfully",
+                                assignment_id: result.insertId
+                            });
 
-                                message:
-                                    "Case assigned successfully",
-
-                                assignment_id:
-                                    result.insertId
-
+                            sendPoliceNotification({
+                                officerId: officer_id,
+                                subject: `New Case Assignment: Case #${id}`,
+                                text: `Case #${id} has been assigned to your unit. Deadline: ${deadline || "Not specified"}.`
+                            }).catch((notifyErr) => {
+                                console.log(`[POLICE_NOTIFY_INFO] Assignment completed without external email dispatch (${notifyErr.message})`);
                             });
 
                         }
@@ -826,8 +796,12 @@ app.post("/api/admin/login", async (req, res) => {
 app.post("/api/admin/forgot-password", async (req, res) => {
     const email = String(req.body.email || "").trim().toLowerCase();
     if (!ADMIN_EMAILS.includes(email)) return res.status(401).json({ message: "Email is not authorized" });
-    if (!transporter) return res.status(503).json({ success: false, message: "Email delivery is not configured. Configure EMAIL_USER and EMAIL_PASS before requesting a reset email." });
     try {
+        const token = jwt.sign(
+            { email },
+            getAdminResetSecret(),
+            { expiresIn: "15m" }
+        );
         const appUrl = (
             process.env.PUBLIC_APP_URL ||
             (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
@@ -836,11 +810,12 @@ app.post("/api/admin/forgot-password", async (req, res) => {
             "http://localhost:5000"
         ).replace(/\/$/, "");
         const resetLink = `${appUrl}/admin/reset-password/${token}`;
-        await transporter.sendMail({ from: EMAIL_USER, to: email, subject: "Reset Your Admin Portal Password", text: `Hello,\n\nUse this link to reset your Admin Portal password:\n${resetLink}\n\nThis link expires in 15 minutes.\n\nMissing Child Rescue Network` });
+        await sendAdminPasswordReset(email, resetLink);
         return res.json({ success: true, message: "Password reset link has been sent to your registered email" });
     } catch (error) {
-        console.error("Email sending error:", error);
-        return res.status(500).json({ success: false, message: "Failed to send email" });
+        console.error(`[ADMIN_AUTH] Failed to send reset email for ${maskEmail(email)}:`, error.message);
+        const status = error.status || 500;
+        return res.status(status).json({ success: false, message: error.message || "Failed to send reset email" });
     }
 });
 
@@ -849,31 +824,17 @@ app.post("/api/admin/forgot-password", async (req, res) => {
 // =====================================================
 
 app.post("/api/admin/request-reset", async (req, res) => {
-
     const email = String(req.body.email || "").trim().toLowerCase();
 
-    console.log(
-        "📩 Reset request for:",
-        email
-    );
+    console.log("[ADMIN_AUTH] Reset request for:", maskEmail(email));
 
     if (!ADMIN_EMAILS.includes(email)) {
-
         return res.status(401).json({
             message: "Email is not authorized"
-        });
-
-    }
-
-    if (!transporter) {
-        return res.status(503).json({
-            success: false,
-            message: "Email delivery is not configured. Configure EMAIL_USER and EMAIL_PASS before requesting a reset email."
         });
     }
 
     try {
-
         const token = jwt.sign(
             { email: email },
             getAdminResetSecret(),
@@ -890,67 +851,24 @@ app.post("/api/admin/request-reset", async (req, res) => {
         const resetLink = `${appUrl}/admin/reset-password/${token}`;
 
         console.log("🔗 Reset link created");
+        console.log("📤 Sending reset email via shared mailer...");
 
-        console.log("📤 Sending reset email...");
+        await sendAdminPasswordReset(email, resetLink);
 
-        const info = await transporter.sendMail({
-
-            from: EMAIL_USER,
-
-            to: email,
-
-            subject:
-                "Reset Your Admin Portal Password",
-
-            text:
-`Hello,
-
-You requested to reset your Admin Portal password.
-
-Click the link below to create a new password:
-
-${resetLink}
-
-This link will expire in 15 minutes.
-
-If you did not request this password reset, you can ignore this email.
-
-Missing Child Rescue Network`
-
-        });
-
-        console.log("✅ RESET EMAIL SENT");
-        console.log("Message ID:", info.messageId);
-        console.log("Accepted:", info.accepted);
-        console.log("Rejected:", info.rejected);
+        console.log("✅ Admin reset email dispatched to SMTP relay");
 
         res.json({
-
             success: true,
-
-            message:
-                "Password reset link has been sent to your registered email"
-
+            message: "Password reset link has been sent to your registered email"
         });
-
     } catch (error) {
-
-        console.error(
-            "❌ Reset email error:",
-            error
-        );
-
-        res.status(500).json({
-
+        console.error(`❌ Admin reset email error for ${maskEmail(email)}:`, error.message);
+        const status = error.status || 500;
+        res.status(status).json({
             success: false,
-
-            message:
-                "Failed to send reset email"
-
+            message: error.message || "Failed to send reset email"
         });
-
     }
-
 });
 
 // =====================================================

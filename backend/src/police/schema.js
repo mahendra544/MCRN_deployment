@@ -122,6 +122,15 @@ async function ensurePoliceSchema(connection) {
       department VARCHAR(150)
     )
   `);
+
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS email_suppressions (
+      email VARCHAR(255) PRIMARY KEY,
+      reason VARCHAR(255) NOT NULL,
+      failure_type VARCHAR(100) NOT NULL,
+      suppressed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 }
 
 async function ensurePoliceSchemaFromEnv(env = process.env) {
