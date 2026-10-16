@@ -168,3 +168,4 @@ node tests/api-tests.js
 - **Port in Use**: If ports 5173 or 5000 are already bound, run `killall node` or stop the conflicting process before restarting `./start.sh`.
 - **Database Connection Error**: Verify that `DATABASE_URL` is accessible from your network and that `PG_SSL` is set to `true` for cloud database providers.
 - **Upload Errors**: Verify Supabase Storage credentials (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`) in `.env`.
+deployment setup for missing child rescue network
