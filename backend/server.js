@@ -1199,9 +1199,10 @@ app.get("/api/police/sightings/pending/count", (req, res) => {
 // ======================================================
 // START SERVER
 // ======================================================
-
+if(process.env.NODE_ENV !=="production"){
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
-});
+});}
+module.exports=app;
 
 //commiting changes for project
