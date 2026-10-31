@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
+import { API_ORIGIN as API_BASE_URL } from "../api.js";
 import "./common-navbar.css";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 function PoliceNavbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profile, setProfile] = useState({ username: "Police Officer", officialId: "", department: "Police Department" });

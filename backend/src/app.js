@@ -48,8 +48,19 @@ function getHtmlFileForRoute(pathname) {
 // Security & Parsing Middleware
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 
-const origins = (process.env.CORS_ORIGINS || "*").split(",").map((x) => x.trim()).filter(Boolean);
+const isProduction = process.env.NODE_ENV === "production" ||
+  String(process.env.CLOUD_MODE || "").toLowerCase() === "true";
+const defaultOrigins = isProduction
+  ? ""
+  : "http://localhost:5173,http://127.0.0.1:5173";
+const origins = (process.env.CORS_ORIGINS || defaultOrigins)
+  .split(",")
+  .map((x) => x.trim())
+  .filter(Boolean);
 const allowAllOrigins = origins.includes("*");
+if (isProduction && (!origins.length || allowAllOrigins)) {
+  throw new Error("Set CORS_ORIGINS to explicit frontend origins before starting in production.");
+}
 
 app.use(cors({
   origin(origin, cb) {
@@ -139,10 +150,17 @@ app.get(["/api/test-db", "/test-db"], async (req, res) => {
 app.get(["/api/test-storage", "/test-storage"], async (req, res) => {
   try {
     const isReady = await ensureBucketExists();
+    if (!isReady) {
+      return res.status(503).json({
+        success: false,
+        bucket: BUCKET_NAME,
+        message: "Supabase Storage is not configured or the bucket could not be verified."
+      });
+    }
     res.json({
       success: true,
       bucket: BUCKET_NAME,
-      message: isReady ? "Supabase Storage connected and bucket verified" : "Supabase Storage check completed"
+      message: "Supabase Storage connected and bucket verified"
     });
   } catch (error) {
     res.status(500).json({

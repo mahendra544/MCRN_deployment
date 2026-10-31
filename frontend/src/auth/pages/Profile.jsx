@@ -28,6 +28,7 @@ export default function Profile({ clear, go }) {
       .catch((x) => {
         if (x.status === 401 || x.status === 403) {
           localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem("mcrn_session");
           clear();
           go("login");
         } else {
@@ -78,6 +79,7 @@ export default function Profile({ clear, go }) {
             <button
               onClick={() => {
                 localStorage.removeItem(TOKEN_KEY);
+                localStorage.removeItem("mcrn_session");
                 clear();
                 go("home");
               }}

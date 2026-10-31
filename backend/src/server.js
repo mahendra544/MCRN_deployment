@@ -25,7 +25,9 @@ async function startServer() {
     console.warn("⚠️ Supabase bucket check warning:", err.message);
   });
 
-  verifyMailer().catch(() => {});
+  verifyMailer().catch((err) => {
+    console.warn("[SMTP] Startup diagnostic failed:", err.code || "unknown error");
+  });
 
   const primaryServer = http.createServer(app);
   primaryServer.listen(PORT, HOST, () => {

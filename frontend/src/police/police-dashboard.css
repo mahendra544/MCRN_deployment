@@ -1356,7 +1356,7 @@
    BUTTONS
    ===================================================== */
 
-.btn {
+.police-dashboard-shell .btn {
   min-height: 42px;
 
   padding: 0 18px;
@@ -1371,29 +1371,29 @@
   font-weight: 600;
 }
 
-.btn-primary {
+.police-dashboard-shell .btn-primary {
   color: #ffffff;
   background: linear-gradient(155deg, #263e6b, var(--pd-navy-deep));
   box-shadow: 0 6px 16px rgba(16, 26, 48, 0.18);
 }
 
-.btn-primary:hover {
+.police-dashboard-shell .btn-primary:hover {
   box-shadow: 0 8px 20px rgba(16, 26, 48, 0.24);
   transform: translateY(-1px);
 }
 
-.btn-secondary {
+.police-dashboard-shell .btn-secondary {
   color: var(--pd-ink);
   background: #ffffff;
   border-color: var(--pd-border);
 }
 
-.btn-secondary:hover {
+.police-dashboard-shell .btn-secondary:hover {
   border-color: var(--pd-muted-soft);
   background: var(--pd-bg);
 }
 
-.btn-danger {
+.police-dashboard-shell .btn-danger {
   color: #fff;
   background: #b42318;
   border-color: #b42318;

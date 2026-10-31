@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import "./navbar.css";
-
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+import { API_ORIGIN as API_BASE_URL } from "../../api.js";
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profile, setProfile] = useState({ name: "User", role: "User" });
@@ -147,9 +145,10 @@ function Navbar() {
         <div className="common-nav-right">
 
           <NavLink
-            to="/notifications"
+            to="/user-dashboard#notifications"
             className="common-notification"
             aria-label="Notifications"
+            onClick={closeMenu}
           >
             <span>
               🔔

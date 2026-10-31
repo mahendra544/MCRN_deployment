@@ -369,18 +369,32 @@ function createTransporter() {
 
   const host = process.env.MAIL_HOST || process.env.SMTP_HOST || "smtp.gmail.com";
   const port = Number(process.env.MAIL_PORT || process.env.SMTP_PORT || 587);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error("MAIL_PORT or SMTP_PORT must be a valid TCP port.");
+  }
 
   // If port is 465, secure is true by default; for 587/25, STARTTLS (requireTLS) is standard
-  const secureEnv = process.env.MAIL_SECURE || process.env.SMTP_SECURE;
+  const secureEnv = process.env.MAIL_SECURE ?? process.env.SMTP_SECURE;
   const secure = secureEnv !== undefined
     ? String(secureEnv).toLowerCase() === "true"
     : port === 465;
+  const requireTlsEnv = process.env.MAIL_REQUIRE_TLS ?? process.env.SMTP_REQUIRE_TLS;
+  const requireTLS = secure
+    ? false
+    : requireTlsEnv === undefined
+      ? true
+      : String(requireTlsEnv).toLowerCase() === "true";
+  const isProduction = process.env.NODE_ENV === "production" ||
+    String(process.env.CLOUD_MODE || "").toLowerCase() === "true";
+  if (isProduction && !secure && !requireTLS) {
+    throw new Error("MAIL_REQUIRE_TLS or SMTP_REQUIRE_TLS must be true for production SMTP.");
+  }
 
   return nodemailer.createTransport({
     host,
     port,
     secure,
-    requireTLS: !secure,
+    requireTLS,
     auth: { user, pass },
     family: 4,
     connectionTimeout: 15000,
@@ -536,12 +550,11 @@ async function sendMailSafe({ to, subject, html, text, from, isTestContext = fal
     transporter = createTransporter();
   }
   if (!transporter) {
-    console.warn("[EMAIL] Mailer credentials not configured (skipping remote delivery).");
-    return {
-      accepted: false,
-      status: "UNCONFIGURED",
-      recipient: maskEmail(to)
-    };
+    console.error("[EMAIL] Mailer credentials are not configured; delivery was not attempted.");
+    const error = new Error("Email delivery is not configured. Please contact support.");
+    error.code = "SMTP_NOT_CONFIGURED";
+    error.status = 503;
+    throw error;
   }
 
   const senderUser = (process.env.MAIL_USERNAME || process.env.MAIL_USER || process.env.EMAIL_USER || "").trim();
@@ -594,7 +607,7 @@ async function sendOtp(to, otp, purpose, options = {}) {
 
   return sendMailSafe({
     to,
-    subject: `[MCRN] ${title} - ${otp}`,
+    subject: `[MCRN] ${title}`,
     html: htmlOtp(title, otp, copy),
     text: `${title}\n\n${copy}\n\nVerification Code: ${otp}\n\nValid for 10 minutes. Never share this code.`,
     isTestContext: options.isTestContext || isTestRecipient(to),

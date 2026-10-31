@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { API_ORIGIN as API_BASE_URL } from "../../api.js";
 
 import Navbar from "../components/navbar";
 import "../styles/child_details.css";
 
 
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 /* =========================================================
    DEFAULT IMAGE
 ========================================================= */

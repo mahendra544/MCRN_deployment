@@ -4,14 +4,16 @@ img, video, canvas, svg { max-width: 100%; }
 button, input, select, textarea { max-width: 100%; }
 
 @media (max-width: 900px) {
-  .admin-common-nav-links, .admin-common-search-wrap { display: none !important; }
+  .admin-common-nav-links { display: none !important; }
+  .admin-common-search-wrap { display: flex !important; width: clamp(90px, 18vw, 150px); }
   .admin-common-menu { display: block !important; }
   .admin-common-mobile-menu { display: block !important; }
   .admin-common-navbar-container { width: calc(100% - 24px); gap: 8px; }
   .admin-common-profile-details, .admin-common-arrow { display: none !important; }
   .admin-common-logout { display: none !important; }
   .admin-main { width: min(100% - 24px, 1400px); margin: 0 auto; min-width: 0; overflow-x: hidden; }
-  .stats-grid, .dashboard-grid, .content-grid, .two-column, .form-grid { grid-template-columns: 1fr !important; }
+  .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .dashboard-grid, .content-grid, .two-column, .form-grid { grid-template-columns: 1fr !important; }
   .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 }
 

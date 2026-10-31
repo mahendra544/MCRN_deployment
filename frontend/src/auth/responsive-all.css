@@ -8,7 +8,7 @@ img, video, canvas, svg { max-width: 100%; }
   .feature-grid, .module-grid, .info-grid, .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 }
 @media (max-width: 760px) {
-  .nav-links, .nav-actions .btn { display: none !important; }
+  .nav-links { display: none; }
   .mobile-menu-btn { display: grid !important; }
   .hero-grid, .module-grid, .info-grid, .stats-grid, .story-grid { grid-template-columns: 1fr !important; }
   .hero { min-height: auto; }
@@ -28,5 +28,4 @@ img, video, canvas, svg { max-width: 100%; }
   .footer-grid { grid-template-columns: 1fr !important; }
   .section { padding: 46px 0; }
   .hero-title { font-size: clamp(2rem, 12vw, 3rem); }
-  .story-copy .story-stat { font-size: clamp(2rem, 12vw, 3rem); }
 }

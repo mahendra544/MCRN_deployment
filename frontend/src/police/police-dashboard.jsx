@@ -11,6 +11,7 @@ import SearchPanel from "./search-panel.jsx";
 import CaseList from "./case-list.jsx";
 import CaseDetailPanel from "./case-detail-panel.jsx";
 import NotificationPanel from "./notification-panel.jsx";
+import { API_ORIGIN as API_BASE_URL } from "../api.js";
 
 import "./dashboard.css";
 import "./notifications.css";
@@ -24,7 +25,6 @@ const EMPTY_FILTERS = {
   location: "",
 };
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem("mcrn_token") || ""}` });
 
 function PoliceDashboard() {

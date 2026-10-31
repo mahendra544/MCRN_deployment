@@ -7,7 +7,8 @@
     "start": "node src/server.js",
     "dev": "node src/server.js",
     "build":"echo Build completed",
-    "init-db": "node ../database/scripts/init-db.js"
+    "init-db": "node ../database/scripts/init-db.js",
+    "smtp:check": "node scripts/smtp-diagnostic.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",

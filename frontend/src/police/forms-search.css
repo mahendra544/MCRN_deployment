@@ -194,7 +194,7 @@
    BUTTON
    ===================================================== */
 
-.btn {
+.police-dashboard-shell .btn {
   min-height: 44px;
 
   padding: 0 18px;
@@ -209,13 +209,13 @@
   font-weight: 600;
 }
 
-.btn-ghost {
+.police-dashboard-shell .btn-ghost {
   color: #55606c;
   background: #f2f4f7;
   border: 1px solid #e0e3ea;
 }
 
-.btn-ghost:hover {
+.police-dashboard-shell .btn-ghost:hover {
   color: #e02323;
   background: #fff0f0;
   border-color: #f7c6c6;

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import UserDashboard from "./pages/user_dashboard";
 import SearchChildren from "./pages/search_children";
@@ -8,16 +8,23 @@ import AboutUs from "./pages/aboutus";
 import ReportMissingChild from "./pages/ReportMissingChild";
 import Reports from "./components/Reports";
 import "./components/Reports.css";
+import PortalGuard from "../auth/PortalGuard.jsx";
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <PortalGuard role="USER">
+        <Routes>
 
         {/* USER DASHBOARD */}
         <Route
           path="/user-dashboard"
           element={<UserDashboard />}
+        />
+
+        <Route
+          path="/notifications"
+          element={<Navigate to="/user-dashboard#notifications" replace />}
         />
 
         {/* SEARCH CHILDREN */}
@@ -62,7 +69,8 @@ function App() {
           element={<UserDashboard />}
         />
 
-      </Routes>
+        </Routes>
+      </PortalGuard>
     </BrowserRouter>
   );
 }

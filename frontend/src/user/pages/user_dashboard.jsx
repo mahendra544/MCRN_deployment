@@ -4,18 +4,29 @@ import React, {
 } from "react";
 
 
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import Navbar from "../components/navbar";
+import { API_ORIGIN as API_BASE_URL } from "../../api.js";
 
 import "../styles/mcrn.css";
 import "../styles/user_dashboard.css";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 
 function UserDashboard() {
+  const { hash } = useLocation();
   const [liveNotifications, setLiveNotifications] = useState([]);
+
+  useEffect(() => {
+    if (hash === "#notifications") {
+      document.getElementById("notifications")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [hash]);
+
   useEffect(() => {
     const load = () => fetch(`${API_BASE_URL}/api/notifications`, { headers: { Authorization: `Bearer ${localStorage.getItem("mcrn_token") || ""}` } }).then(r => r.ok ? r.json() : null).then(data => setLiveNotifications(Array.isArray(data?.notifications) ? data.notifications : [])).catch(() => {});
     load();
@@ -652,7 +663,7 @@ function UserDashboard() {
               {/* NOTIFICATIONS */}
 
               <Link
-                to="/notifications"
+                to="/user-dashboard#notifications"
                 className="activity-card"
               >
 
@@ -664,7 +675,7 @@ function UserDashboard() {
                 <div>
 
                   <span className="activity-number">
-                    03
+                    {String(liveNotifications.length).padStart(2, "0")}
                   </span>
 
 
@@ -877,14 +888,14 @@ function UserDashboard() {
                   NOTIFICATIONS
               ================================================= */}
 
-              <section className="dashboard-panel notifications-panel">
+              <section className="dashboard-panel notifications-panel" id="notifications">
                 <div className="panel-top">
                   <div><span className="dashboard-label">UPDATES</span><h2>Notifications</h2></div>
-                  <Link to="/notifications" className="panel-view-link">View all →</Link>
+                  <Link to="/user-dashboard#notifications" className="panel-view-link">View all →</Link>
                 </div>
                 <div className="notification-list">
                   {liveNotifications.slice(0, 5).map((notification) => (
-                    <Link key={notification.id} to="/notifications" className="dashboard-notification unread">
+                    <Link key={notification.id} to="/user-dashboard#notifications" className="dashboard-notification unread">
                       <div className="notification-icon">{notification.type === "resolved" ? "✓" : "!"}</div>
                       <div><h4>{notification.title}</h4><p>{notification.message}</p><span>{notification.time ? new Date(notification.time).toLocaleString("en-IN") : "Recent update"}</span></div>
                     </Link>

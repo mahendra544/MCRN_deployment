@@ -1,4 +1,6 @@
-const API_BASE = import.meta.env.VITE_API_URL || "/api";
+import { apiBaseUrl } from "../../api.js";
+
+const API_BASE = apiBaseUrl();
 
 /**
  * Wraps a failed request in an Error whose `.message` is the backend's

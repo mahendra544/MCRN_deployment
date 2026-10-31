@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/navbar";
+import { API_ORIGIN as API_BASE_URL } from "../../api.js";
 
 import "../styles/mcrn.css";
 import "../styles/search_children.css";
 
 
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 /* =========================================================
    DEFAULT CHILD PHOTO
 ========================================================= */

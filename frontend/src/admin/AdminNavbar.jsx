@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { API_ORIGIN as API_BASE_URL } from "../api.js";
 import "./admin-navbar.css";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 function AdminNavbar({ activePage, setActivePage, onLogout }) {
   const [menuOpen, setMenuOpen] = useState(false);

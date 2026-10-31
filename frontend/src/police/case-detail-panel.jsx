@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import StatusBadge from "./status-badge.jsx";
+import { API_ORIGIN as API_BASE_URL } from "../api.js";
 
 const NEXT_STAGE = {
   Open: "Investigating",
@@ -9,7 +10,6 @@ const NEXT_STAGE = {
   Closed: "Closed",
 };
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 function CaseDetailPanel({
   caseItem,

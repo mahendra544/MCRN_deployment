@@ -39,6 +39,8 @@ if (!fs.existsSync(uploadsFolder)) {
 
 const reportingDb = db;
 const userDb = db;
+const isProduction = process.env.NODE_ENV === "production" ||
+  String(process.env.CLOUD_MODE || "").toLowerCase() === "true";
 
 ensurePoliceSchema(db).then(() => {
   console.log("Connected to PostgreSQL database successfully!");
@@ -56,7 +58,7 @@ const requireUserOrPolice = requireAuth(["USER", "POLICE", "ADMIN"]);
 // MULTER CONFIGURATION
 // ======================================================
 
-const storage = multer.diskStorage({
+const storage = isProduction ? multer.memoryStorage() : multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadsFolder);
   },
@@ -72,7 +74,7 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ storage });
+const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 // ======================================================
 // TEST ROUTE
@@ -116,20 +118,38 @@ app.post("/api/sightings", requireUserOrPolice, upload.single("photo"), async (r
     });
   }
 
-  let photo_url = `/uploads/${req.file.filename}`;
+  let photo_url = isProduction ? null : `/uploads/${req.file.filename}`;
+  if (!supabase && isProduction) {
+    return res.status(503).json({
+      message: "Evidence storage is unavailable. Please try again later."
+    });
+  }
+
   if (supabase) {
     try {
-      const fileBuffer = fs.readFileSync(req.file.path);
+      const fileBuffer = req.file.buffer || fs.readFileSync(req.file.path);
       const uploadedUrl = await uploadChildImage({
         buffer: fileBuffer,
         originalname: req.file.originalname,
         mimetype: req.file.mimetype,
         size: req.file.size
       }, { userId: req.user?.sub || "user", prefix: "sightings" });
-      if (uploadedUrl) {
-        photo_url = uploadedUrl;
+      if (!uploadedUrl) {
+        throw new Error("Supabase Storage returned no image URL.");
+      }
+      photo_url = uploadedUrl;
+      if (req.file.path) {
+        fs.unlink(req.file.path, (unlinkError) => {
+          if (unlinkError) console.warn("Could not remove temporary sighting image:", unlinkError.message);
+        });
       }
     } catch (uploadErr) {
+      if (isProduction) {
+        console.error("Supabase sighting image upload failed:", uploadErr.message);
+        return res.status(503).json({
+          message: "Evidence storage is unavailable. Please try again later."
+        });
+      }
       console.warn("Sightings Supabase upload fallback:", uploadErr.message);
     }
   }

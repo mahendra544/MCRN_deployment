@@ -107,6 +107,7 @@ async function issueOtp(emailAddr, purpose, { enforceCooldown = true } = {}) {
   console.log(`[AUTH] OTP generation started for purpose=${purpose}`);
   const conn = await pool.getConnection();
   let code;
+  let otpId;
   try {
     await conn.beginTransaction();
     const [recent] = await conn.query(
@@ -126,10 +127,11 @@ async function issueOtp(emailAddr, purpose, { enforceCooldown = true } = {}) {
     code = String(randomInt(100000, 1000000));
     console.log("[AUTH] OTP generated");
     const hash = await bcrypt.hash(code, 12);
-    await conn.query(
+    const [inserted] = await conn.query(
       `INSERT INTO otp_tokens(email, purpose, code_hash, expires_at) VALUES(?, ?, ?, NOW() + INTERVAL '10 MINUTE')`,
       [emailAddr, purpose, hash]
     );
+    otpId = inserted.insertId || inserted.rows?.[0]?.id;
     await conn.commit();
     console.log("[AUTH] OTP stored");
     console.log(`[OTP] Created OTP record`);
@@ -141,7 +143,27 @@ async function issueOtp(emailAddr, purpose, { enforceCooldown = true } = {}) {
   } finally {
     conn.release();
   }
-  await sendOtp(emailAddr, code, purpose);
+  try {
+    const delivery = await sendOtp(emailAddr, code, purpose);
+    if (!delivery?.accepted) {
+      const error = new Error("Email delivery is not configured. Please contact support.");
+      error.status = 503;
+      throw error;
+    }
+    return delivery;
+  } catch (error) {
+    if (otpId) {
+      try {
+        await pool.query(
+          "UPDATE otp_tokens SET consumed_at=NOW() WHERE id=? AND consumed_at IS NULL",
+          [otpId]
+        );
+      } catch (invalidateError) {
+        console.error("[AUTH] Failed to invalidate an undelivered OTP record:", invalidateError.message);
+      }
+    }
+    throw error;
+  }
 }
 
 // ----------------------------------------------------
@@ -179,8 +201,11 @@ router.post("/register/user", parse(schemas.user), async (req, res, next) => {
     } finally {
       conn.release();
     }
-    await issueOtp(email, "REGISTRATION_VERIFICATION", { enforceCooldown: false });
-    res.status(201).json({ message: "Registration successful. Check your email for the verification code.", id });
+    const delivery = await issueOtp(email, "REGISTRATION_VERIFICATION", { enforceCooldown: false });
+    const message = delivery.status === "ISOLATED_DEV_SIMULATED"
+      ? "Registration created in isolated test mode. No email was sent."
+      : "Registration successful. Check your email for the verification code.";
+    res.status(201).json({ message, id });
   } catch (e) {
     next(e);
   }
@@ -221,8 +246,11 @@ router.post("/register/police", parse(schemas.police), async (req, res, next) =>
     } finally {
       conn.release();
     }
-    await issueOtp(email, "REGISTRATION_VERIFICATION", { enforceCooldown: false });
-    res.status(201).json({ message: "Police registration successful. Check your email for the verification code.", id });
+    const delivery = await issueOtp(email, "REGISTRATION_VERIFICATION", { enforceCooldown: false });
+    const message = delivery.status === "ISOLATED_DEV_SIMULATED"
+      ? "Police registration created in isolated test mode. No email was sent."
+      : "Police registration successful. Check your email for the verification code.";
+    res.status(201).json({ message, id });
   } catch (e) {
     next(e);
   }
@@ -349,8 +377,11 @@ router.post("/resend-otp", parse(schemas.resend), async (req, res, next) => {
     if (req.body.purpose === "PASSWORD_RESET" && !u.verified) {
       return res.status(400).json({ message: "Password reset is only available for verified accounts." });
     }
-    await issueOtp(req.body.email, req.body.purpose);
-    res.json({ message: "A new verification code has been sent." });
+    const delivery = await issueOtp(req.body.email, req.body.purpose);
+    const message = delivery.status === "ISOLATED_DEV_SIMULATED"
+      ? "No email was sent in isolated test mode."
+      : "A new verification code has been sent.";
+    res.json({ message });
   } catch (e) {
     next(e);
   }

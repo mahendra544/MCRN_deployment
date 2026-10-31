@@ -226,6 +226,11 @@ MAIL_PASSWORD=your_gmail_app_password
 MAIL_FROM=MCRN Security <your_email@gmail.com>
 ```
 
+Check SMTP configuration and connectivity without sending an email:
+```bash
+npm --prefix backend run smtp:check
+```
+
 ### Safety Features
 - **Isolated Development Mode**: Set `MCRN_DEV_OTP_MODE=true` during testing to log OTP codes to the terminal and suppress live remote transmission to fictional/placeholder addresses.
 - **Recipient Domain Protection**: Delivery to known test/placeholder domains (`example.com`, `mcrn-test.org`, `police.mcrn.org`) is automatically classified and isolated.
@@ -306,7 +311,7 @@ ONE VERCEL PROJECT
    | `PG_SSL` | Enable SSL for PostgreSQL | `true` |
    | `JWT_SECRET` | Secret key for JWT session tokens | Min 32 chars random string |
    | `JWT_EXPIRES_IN` | Session expiration window | `1h` |
-   | `CORS_ORIGINS` | Allowed CORS origins | `*` or your Vercel domain |
+   | `CORS_ORIGINS` | Allowed frontend origins | Explicit Vercel domain(s), comma-separated |
    | `MAIL_HOST` | SMTP server host | `smtp.gmail.com` |
    | `MAIL_PORT` | SMTP port | `587` |
    | `MAIL_SECURE` | SSL transport | `false` |
@@ -323,6 +328,10 @@ ONE VERCEL PROJECT
 
 4. **Deploy**:
    - Click **Deploy**. Vercel will install dependencies, build the frontend with all 6 entry points, and bundle `api/index.js` as the serverless API handler.
+
+### Separate Frontend and Backend Deployment
+
+The frontend can also be deployed from the `frontend` project root to Vercel, with the Express service deployed from `backend` as a long-running Render Web Service. Set the frontend build-time variable `VITE_API_URL` to the backend origin (for example, `https://YOUR-BACKEND-DOMAIN`); the frontend adds the `/api` prefix consistently. On the backend, set `CORS_ORIGINS` to the exact frontend origin (for example, `https://YOUR-FRONTEND-DOMAIN`) and set `PORT` through the hosting platform. Keep database, SMTP, JWT, and Supabase secrets only in the backend environment. Do not include localhost origins in production configuration.
 
 ---
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
+import { API_ORIGIN as API_BASE_URL } from "../api.js";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 export default function PoliceProfile() {
   const [profile, setProfile] = useState({

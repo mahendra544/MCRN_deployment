@@ -148,7 +148,7 @@
    6. BUTTONS
    ===================================================== */
 
-.btn {
+.police-dashboard-shell .btn {
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
@@ -157,12 +157,12 @@
     color 0.18s ease;
 }
 
-.btn-secondary:hover,
-.btn-ghost:hover {
+.police-dashboard-shell .btn-secondary:hover,
+.police-dashboard-shell .btn-ghost:hover {
   transform: translateY(-1px);
 }
 
-.btn:active {
+.police-dashboard-shell .btn:active {
   transform: translateY(0) scale(0.97);
 }
 

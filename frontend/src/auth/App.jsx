@@ -1,65 +1,81 @@
 import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Layout from "./components/Layout.jsx";
 import Home from "./pages/Home.jsx";
 import Register from "./pages/Register.jsx";
 import Login from "./pages/Login.jsx";
 import PoliceLogin from "./pages/PoliceLogin.jsx";
-import AdminLogin from "./pages/AdminLogin.jsx";
-import AdminDashboard from "./pages/AdminDashboard.jsx";
 import Verify from "./pages/Verify.jsx";
 import Forgot from "./pages/Forgot.jsx";
 import Reset from "./pages/Reset.jsx";
 import Profile from "./pages/Profile.jsx";
 import { get, TOKEN_KEY } from "./api/client.js";
 
+const PAGE_PATHS = {
+  home: "/",
+  login: "/login",
+  "police-login": "/police-login",
+  register: "/register",
+  verify: "/verify",
+  forgot: "/forgot",
+  reset: "/reset",
+  profile: "/profile",
+};
+
+function pageForPath(path) {
+  return Object.entries(PAGE_PATHS).find(([, route]) => route === path)?.[0] || "home";
+}
+
 export default function App() {
-  const [page, setPage] = useState("home");
-  const [data, setData] = useState(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [page, setPage] = useState(() => pageForPath(location.pathname));
+  const [data, setData] = useState(location.state?.data || null);
   const [session, setSession] = useState(null);
   const [checkingSession, setCheckingSession] = useState(true);
 
   const go = (p, d) => {
     setPage(p);
     setData(d);
+    navigate(PAGE_PATHS[p] || "/", d === undefined ? undefined : { state: { data: d } });
   };
 
   useEffect(() => {
     document.body.classList.add("page-ready");
-    if (window.location.pathname === "/admin-login") {
-      window.location.replace("/admin/");
-      return;
-    }
-    const routePage = {
-      "/login": "login", "/register": "register", "/police-login": "login",
-      "/forgot": "forgot", "/profile": "profile"
-    }[window.location.pathname];
-    if (routePage) setPage(routePage);
+    setPage(pageForPath(location.pathname));
+    setData(location.state?.data || null);
+  }, [location.pathname, location.state]);
 
-    // Fixed: a hard refresh used to lose the logged-in view entirely, even
-    // though the JWT was still sitting in localStorage. Now we check for a
-    // token on load and restore the session by fetching the profile.
+  useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY);
     if (token) {
       get("/user/profile", token)
         .then((profile) => {
           setSession({ token, ...profile });
-          setPage(profile.role === "ADMIN" ? "admin-dashboard" : "profile");
+          if (["/", "/login", "/police-login"].includes(location.pathname)) {
+            const destination = {
+              USER: "/user-dashboard",
+              POLICE: "/police-dashboard",
+              ADMIN: "/admin",
+            }[profile.role];
+            if (destination) navigate(destination, { replace: true });
+          }
         })
-        .catch((x) => {
-          // Fixed: previously this always removed the token on any failure,
-          // including a plain network error (backend momentarily down).
-          // That meant a temporary connectivity blip permanently logged the
-          // user out. Only clear the token when the server actually
-          // rejected it.
-          if (!x.networkError) {
+        .catch((error) => {
+          if (error.status === 401 || error.status === 403) {
             localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem("mcrn_session");
+            setSession(null);
+            if (location.pathname === "/profile") {
+              navigate("/login", { replace: true });
+            }
           }
         })
         .finally(() => setCheckingSession(false));
     } else {
       setCheckingSession(false);
     }
-  }, []);
+  }, [location.pathname, navigate]);
 
   if (checkingSession) {
     return (
@@ -80,9 +96,7 @@ export default function App() {
       {page === "register" && <Register go={go} />}
       {page === "login" && <Login go={go} setSession={setSession} />}
       {page === "police-login" && <PoliceLogin go={go} setSession={setSession} />}
-      {page === "admin-login" && <AdminLogin go={go} setSession={setSession} />}
-      {page === "admin-dashboard" && <AdminDashboard go={go} clear={() => setSession(null)} />}
-            {page === "verify" && <Verify email={data} go={go} />}
+      {page === "verify" && <Verify email={data} go={go} />}
       {page === "forgot" && <Forgot go={go} />}
       {page === "reset" && <Reset email={data} go={go} />}
       {page === "profile" && <Profile clear={() => setSession(null)} go={go} />}

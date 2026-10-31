@@ -824,6 +824,7 @@
 
 .notifications-panel {
   min-width: 0;
+  scroll-margin-top: 92px;
 }
 
 .notification-list {

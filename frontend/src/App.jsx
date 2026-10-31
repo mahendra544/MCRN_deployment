@@ -22,8 +22,12 @@ import ContactUs from "./contact/components/ContactUs.jsx";
 
 // Admin module
 import AppAdmin from "./admin/AppAdmin.jsx";
+import PortalGuard from "./auth/PortalGuard.jsx";
 
 export default function App() {
+  const userPortal = (page) => <PortalGuard role="USER">{page}</PortalGuard>;
+  const policePortal = (page) => <PortalGuard role="POLICE">{page}</PortalGuard>;
+
   return (
     <BrowserRouter>
       <Routes>
@@ -39,22 +43,23 @@ export default function App() {
         <Route path="/admin-login" element={<Navigate to="/admin" replace />} />
 
         {/* User Portal Routes */}
-        <Route path="/user-dashboard" element={<UserDashboard />} />
-        <Route path="/search-children" element={<SearchChildren />} />
-        <Route path="/child/:caseId" element={<ChildDetails />} />
-        <Route path="/report-sighting" element={<Sightings />} />
-        <Route path="/about-us" element={<AboutUs />} />
-        <Route path="/my-cases" element={<Reports />} />
-        <Route path="/reports" element={<Reports />} />
-        <Route path="/report-child" element={<ReportMissingChild />} />
+        <Route path="/user-dashboard" element={userPortal(<UserDashboard />)} />
+        <Route path="/notifications" element={userPortal(<Navigate to="/user-dashboard#notifications" replace />)} />
+        <Route path="/search-children" element={userPortal(<SearchChildren />)} />
+        <Route path="/child/:caseId" element={userPortal(<ChildDetails />)} />
+        <Route path="/report-sighting" element={userPortal(<Sightings />)} />
+        <Route path="/about-us" element={userPortal(<AboutUs />)} />
+        <Route path="/my-cases" element={userPortal(<Reports />)} />
+        <Route path="/reports" element={userPortal(<Reports />)} />
+        <Route path="/report-child" element={userPortal(<ReportMissingChild />)} />
 
         {/* Police Portal Routes */}
-        <Route path="/police-dashboard" element={<PoliceDashboard />} />
-        <Route path="/police-cases" element={<PoliceDashboard />} />
-        <Route path="/police-verify" element={<PoliceDashboard />} />
-        <Route path="/police-search" element={<PoliceDashboard />} />
-        <Route path="/police-notifications" element={<PoliceDashboard />} />
-        <Route path="/police-profile" element={<PoliceProfile />} />
+        <Route path="/police-dashboard" element={policePortal(<PoliceDashboard />)} />
+        <Route path="/police-cases" element={policePortal(<PoliceDashboard />)} />
+        <Route path="/police-verify" element={policePortal(<PoliceDashboard />)} />
+        <Route path="/police-search" element={policePortal(<PoliceDashboard />)} />
+        <Route path="/police-notifications" element={policePortal(<PoliceDashboard />)} />
+        <Route path="/police-profile" element={policePortal(<PoliceProfile />)} />
 
         {/* Contact Us Route */}
         <Route path="/contact-us" element={<ContactUs />} />

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
+import { API_ORIGIN as API_BASE_URL } from "../../api.js";
 import "./Reports.css";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 function Reports() {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);

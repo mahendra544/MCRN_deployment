@@ -1,9 +1,9 @@
 import { useState } from "react";
 import Navbar from "../components/navbar";
+import { API_ORIGIN as API_BASE_URL } from "../../api.js";
 import "../styles/sightings.css";
 
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 function Sightings() {
   const [submitted, setSubmitted] = useState(false);
 
