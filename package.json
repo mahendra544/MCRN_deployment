@@ -11,10 +11,10 @@
     "node": "24.x"
   },
   "scripts": {
-    "setup": "./setup.sh",
-    "start": "./cloud-start.sh",
-    "start:local": "./start.sh",
-    "dev": "./start.sh",
+    "setup": "./scripts/setup.sh",
+    "start": "./scripts/cloud-start.sh",
+    "start:local": "./scripts/start.sh",
+    "dev": "./scripts/start.sh",
     "check": "node -c backend/src/app.js && node -c backend/src/server.js && node -c api/index.js && cd frontend && npm run build",
     "init-db": "node database/scripts/init-db.js",
     "build": "cd frontend && npm run build",

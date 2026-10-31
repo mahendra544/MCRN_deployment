@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -e
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # Ensure modern node and npm if present in anaconda or custom path
 if [ -d "/home/user/anaconda3/bin" ]; then
@@ -43,7 +43,7 @@ echo "============================================================"
 echo " SETUP COMPLETE"
 echo "============================================================"
 echo "Start the MCRN system with:"
-echo "  ./start.sh"
+echo "  ./scripts/start.sh"
 echo ""
 echo "Website:      http://localhost:5173"
 echo "API gateway:  http://localhost:5000"

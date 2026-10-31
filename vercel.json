@@ -27,6 +27,7 @@
     { "source": "/contact-us(/.*)?", "destination": "/contact.html" },
     { "source": "/reporting(/.*)?", "destination": "/reporting.html" },
     { "source": "/report-child(/.*)?", "destination": "/reporting.html" },
+    { "source": "/reports(/.*)?", "destination": "/reporting.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

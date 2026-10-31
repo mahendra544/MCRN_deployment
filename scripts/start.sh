@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -e
-ROOT="$(cd "$(dirname "$0")" && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 if [ -d "/home/user/anaconda3/bin" ]; then
   export PATH="/home/user/anaconda3/bin:$PATH"

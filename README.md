@@ -1,171 +1,334 @@
 # Missing Child Rescue Network (MCRN)
 
-Missing Child Rescue Network (MCRN) is a full-stack platform dedicated to rapid reporting, investigation tracking, and recovery of missing children. The platform bridges citizens, law enforcement officers, and network administrators through real-time notifications, sighting verifications, and cross-departmental coordination.
+Missing Child Rescue Network (MCRN) is a mission-critical full-stack platform dedicated to the rapid reporting, investigation tracking, and safe recovery of missing children. The platform unites citizens, law enforcement officers, and administrative coordinators through real-time alert notifications, sighting verifications, and cross-departmental response workflows.
 
 ---
 
 ## Architecture Overview
 
-MCRN is organized into a clean, conventional full-stack architecture:
+MCRN is engineered as a unified, production-ready full-stack application deployable on **Vercel** or cloud/container environments:
 
-- **Frontend**: Single unified React application housing all user experiences (Citizen Portal, Police Operations Portal, Admin Management Portal, and Public Reporting). Built with Vite and Tailwind CSS.
-- **Backend**: Unified Node.js / Express API service consolidating Authentication, User Dashboard, Citizen Reporting, Police Operations, and Admin Controls.
-- **Database**: PostgreSQL database hosting relational models for user credentials, role profiles, missing child cases, sightings, and administrative audit trails.
-- **Integration**: Lightweight high-performance Gateway serving the compiled web application and proxying API traffic.
+- **Frontend**: High-performance multi-entry React 18 application built with Vite and Tailwind CSS. Provides dedicated, secure experiences for Citizens, Law Enforcement, and System Administrators:
+  - Landing & Authentication (`/`, `/login`, `/register`, `/verify`, `/forgot`, `/reset`)
+  - Citizen Portal (`/user-dashboard`, `/search-children`, `/child/:caseId`, `/report-sighting`, `/about-us`, `/my-cases`)
+  - Police Operations Portal (`/police-dashboard`, `/police-cases`, `/police-verify`, `/police-search`, `/police-notifications`, `/police-profile`)
+  - Administrator Portal (`/admin`, `/admin/*`)
+  - Citizen Reporting Portal (`/reporting`, `/report-child`, `/reports`)
+  - Emergency Helpline (`/contact-us`)
+- **Backend API**: Unified Express service modularized by domain (`auth`, `user`, `police`, `admin`, `reporting`), executed as a serverless API function on Vercel (`api/index.js`) or as an HTTP daemon locally/in cloud containers (`backend/src/server.js`).
+- **Database**: PostgreSQL database hosting normalized relational schemas for users, police profiles, missing cases, citizen reports, sightings, notifications, audit trails, and OTP verification tokens.
+- **Storage**: Supabase Storage (`missing-child-images` bucket) providing resilient cross-device media delivery for missing child photographs and investigation evidence.
+- **Email Service**: SMTP email delivery powered by Nodemailer with isolated development mode safety controls, automated address masking, and deliverability verification.
 
 ---
 
 ## Directory Structure
 
 ```text
-mahendra_project/
-├── frontend/                     # Unified React + Vite frontend application
+MCRN/
+├── api/
+│   └── index.js                      # Vercel serverless API entry point
+│
+├── frontend/                         # Unified multi-entry React + Vite application
+│   ├── public/                       # Shared public assets (logos, avatars, icons)
+│   │   ├── assets/                   # Branding graphics (mcrn-logo.jpeg)
+│   │   ├── default-child.jpg         # Default placeholder child avatar
+│   │   ├── favicon.svg               # Web favicon
+│   │   ├── icons.svg                 # SVG sprite icons
+│   │   ├── logo.png                  # Navigation logo
+│   │   └── mcrn-logo.png             # Alternate logo branding
 │   ├── src/
-│   │   ├── auth/                 # Login, Registration, OTP Verification, Citizen Profile
-│   │   ├── user/                 # Citizen Dashboard, Child Details, Search, Sighting Reports
-│   │   ├── reporting/            # Citizen Missing Child Reporting form & synchronization
-│   │   ├── police/               # Police Operations Dashboard, Verification, Case Records
-│   │   ├── contact/              # Emergency Helpline and Contact Us page
-│   │   ├── admin/                # Administrator Portal, Case Assignment, Audit Logs, Analytics
-│   │   ├── App.jsx               # Centralized React Router configuration
-│   │   ├── main.jsx              # Application entry point with global auth token interceptor
-│   │   └── index.css             # Base application stylesheet
-│   ├── public/                   # Shared static assets (logos, default avatar, icons)
-│   ├── package.json              # Frontend dependencies and build scripts
-│   └── vite.config.js            # Vite configuration and dev proxy settings
+│   │   ├── admin/                    # Admin portal pages, case assignments, audit logs
+│   │   ├── auth/                     # Citizen auth, OTP verification, login, profile
+│   │   ├── contact/                  # Contact Us & Emergency Helpline portal
+│   │   ├── police/                   # Police investigation portal, case row, verify
+│   │   ├── reporting/                # Missing child report submission & sync
+│   │   ├── user/                     # Citizen dashboard, search children, sightings
+│   │   ├── App.jsx                   # Root application router component
+│   │   ├── main.jsx                  # Root client bootstrap
+│   │   └── index.css                 # Global styling & Tailwind base
+│   ├── admin.html                    # Admin entry HTML
+│   ├── contact.html                  # Contact Us entry HTML
+│   ├── index.html                    # Landing / Auth entry HTML
+│   ├── police.html                   # Police entry HTML
+│   ├── reporting.html                # Reporting entry HTML
+│   ├── user.html                     # Citizen portal entry HTML
+│   ├── package.json                  # Frontend dependencies & build scripts
+│   ├── postcss.config.js             # PostCSS configuration
+│   ├── tailwind.config.js            # Tailwind CSS configuration
+│   └── vite.config.js                # Multi-page Rollup input configuration
 │
-├── backend/                      # Unified Express backend service
+├── backend/                          # Unified Node.js / Express backend service
 │   ├── src/
-│   │   ├── auth/                 # JWT authentication, registration, password recovery
-│   │   ├── user/                 # Children directory queries & citizen dashboard data
-│   │   ├── reporting/            # Report submission, Multer & Supabase Storage upload, dual-table sync
-│   │   ├── police/               # Police case investigations, sightings verification, alerts
-│   │   ├── admin/                # Case assignment, officer & citizen management, audit logs
-│   │   ├── middleware/           # Role-based authorization & JWT verification
-│   │   ├── utils/                # Email utilities (Nodemailer) & helper routines
-│   │   ├── db/                   # PostgreSQL connection pool & SQL query wrappers
-│   │   └── server.js             # Master Express server entry point
-│   ├── uploads/                  # Local media upload storage
-│   └── package.json              # Backend dependencies and run scripts
+│   │   ├── admin/                    # Admin controllers, case delegation, audit logging
+│   │   ├── auth/                     # Authentication routes, password recovery, OTP logic
+│   │   ├── config/                   # Supabase Storage client configuration
+│   │   ├── db/                       # PostgreSQL connection pool & SQL query wrappers
+│   │   ├── middleware/               # Role-based authorization & JWT verification
+│   │   ├── police/                   # Police investigation routes & schema migrations
+│   │   ├── reporting/                # Report submission routes & dual-table sync
+│   │   ├── user/                     # Citizen dashboard & child directory routes
+│   │   ├── utils/                    # Email delivery & safety utilities (Nodemailer)
+│   │   ├── app.js                    # Master Express application definition
+│   │   └── server.js                 # Standalone HTTP server runner (local & container)
+│   ├── uploads/                      # Local media storage fallback (with .gitkeep)
+│   └── package.json                  # Backend dependencies & runtime scripts
 │
-├── database/                     # Database migrations, schema, and seed routines
-│   ├── schema/                   # PostgreSQL DDL definitions and column migrations
-│   ├── seed/                     # Default officer and administrator seed records
-│   └── scripts/                  # Unified database initialization script (init-db.js)
+├── database/                         # Database migrations, schema, and seed scripts
+│   ├── schema/                       # PostgreSQL DDL definitions (schema.sql, schema.js)
+│   ├── scripts/                      # Database initialization script (init-db.js)
+│   └── seed/                         # Police & administrative account seeders
 │
-├── integration/                  # Integration & Web Serving Gateway
-│   └── server/                   # Express / HTTP static server and API proxy
+├── docs/                             # Extended deployment and setup documentation
+│   ├── CLOUD_DEPLOYMENT.md           # Cloud container hosting instructions
+│   ├── SMTP_SETUP.md                 # Gmail SMTP & application password configuration
+│   └── FIXES_INCLUDED.txt            # Architecture history & changelog
 │
-├── docs/                         # Extended deployment and configuration guides
-│   ├── CLOUD_DEPLOYMENT.md
-│   ├── SMTP_SETUP.md
-│   └── FIXES_INCLUDED.txt
+├── integration/                      # Lightweight local web gateway
+│   └── server/                       # Static serving & API proxy server (port 5173)
 │
-├── scripts/                      # Build, startup, and automation scripts
-│   ├── cloud-build.sh
-│   └── cloud-start.sh
+├── scripts/                          # Automation, build, and lifecycle scripts
+│   ├── cloud-build.sh                # Monorepo installation & build script
+│   ├── cloud-start.sh                # Cloud container runtime launcher
+│   ├── setup.sh                      # Automated local setup & database initialization
+│   └── start.sh                      # Local development runtime launcher
 │
-├── tests/                        # Verification and integration tests
-│   ├── api-tests.js
-│   └── db-test.js
+├── tests/                            # Comprehensive automated testing suite
+│   ├── api-tests.js                  # End-to-end API, health, and portal tests
+│   ├── db-test.js                    # Database connectivity & table schema verification
+│   ├── email-delivery-tests.js       # Email masking, safety, and SMTP tests
+│   ├── otp-lifecycle-tests.js        # Registration, login, OTP, and reset lifecycle
+│   ├── supabase-storage-e2e.js       # Cross-device report image upload verification
+│   └── workflow-tests.js             # Full cross-role workflow verification suite
 │
-├── .env                          # Centralized active environment configuration (uncommitted)
-├── .env.example                  # Template with safe placeholder keys
-├── .gitignore                    # Git ignore rules for node_modules, dist, and secrets
-├── setup.sh                      # One-click dependency installation, migration, and build
-└── start.sh                      # One-click unified system launcher
+├── .env.example                      # Local development environment template
+├── .env.cloud.example                # Cloud / Vercel production environment template
+├── .gitignore                        # Git ignore rules for node_modules, dist, and secrets
+├── package.json                      # Monorepo root package.json (workspaces & scripts)
+├── package-lock.json                 # Monorepo lockfile
+├── vercel.json                       # Vercel deployment configuration & route rewrites
+└── README.md                         # Project documentation
 ```
 
 ---
 
-## Prerequisites
+## Technologies Used
 
-- **Node.js**: v18.0.0 or higher
-- **npm**: v9.0.0 or higher
-- **PostgreSQL**: v14.0 or higher (or cloud PostgreSQL instance e.g., Supabase / Neon / AWS RDS)
+- **Frontend**: React 18, Vite 5, React Router DOM 7, Tailwind CSS, Lucide React
+- **Backend**: Node.js 22/24, Express 4, Helmet, CORS, Zod, BcryptJS, JSONWebToken, Multer
+- **Database**: PostgreSQL (Supabase / Neon / AWS RDS / Local), `pg` driver with connection pooling
+- **Storage**: Supabase Storage (`@supabase/supabase-js`)
+- **Email Delivery**: Nodemailer with SMTP TLS/SSL transport
+- **Deployment**: Vercel Serverless Functions (`api/index.js`) + Vercel Edge Static CDN
 
 ---
 
-## Environment Configuration
+## Local Installation & Setup
 
-All environment configuration is centralized in **one root file**: `.env`.
+### Prerequisites
 
-Copy the template file:
+- **Node.js**: v18.0.0 or higher (v22/v24 recommended)
+- **npm**: v9.0.0 or higher
+- **PostgreSQL**: v14.0 or higher (or cloud instance)
+
+### 1. Clone & Configure Environment
+
 ```bash
+git clone https://github.com/lavanyatangellapalli24/Missing_child_Rescue_Network.git
+cd Missing_child_Rescue_Network
 cp .env.example .env
 ```
 
-Configure your parameters:
-- `DATABASE_URL`: PostgreSQL connection string (`postgresql://USER:PASSWORD@HOST:PORT/DBNAME`).
-- `PG_SSL`: Set to `true` for cloud-hosted databases requiring SSL, or `false` for local databases.
-- `JWT_SECRET`: Random secret string (minimum 32 characters) used to sign session tokens.
-- `MAIL_USERNAME` / `MAIL_PASSWORD`: SMTP credentials for OTP account verification emails.
-- `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_STORAGE_BUCKET`: Supabase Storage credentials for photos.
+Edit `.env` to configure your PostgreSQL credentials, JWT secret, Supabase credentials, and SMTP credentials.
 
----
+### 2. One-Click Setup
 
-## Quick Start (One-Click Setup)
-
-Run the automated setup script to install dependencies across modules, initialize database tables, and produce the frontend bundle:
+Run the automated setup script to install dependencies across all workspaces, initialize database schemas, and compile the frontend:
 
 ```bash
-./setup.sh
+npm run setup
+# Or directly: ./scripts/setup.sh
 ```
 
-Launch the complete platform:
+### 3. Start Local Development
+
+Launch the complete platform (unified backend on `:5000` + web gateway on `:5173`):
 
 ```bash
-./start.sh
+npm run dev
+# Or directly: ./scripts/start.sh
 ```
 
-Once started:
-- **Website**: http://localhost:5173
+- **Web Application**: http://localhost:5173
 - **API Gateway**: http://localhost:5000
 - **API Health**: http://localhost:5000/health
 
 ---
 
-## Module Details
+## Database Configuration
 
-### 1. Citizen Portal
-- **Login / Register**: `/login` and `/register`
-- **Dashboard**: `/user-dashboard`
-- **Search Missing Children**: `/search-children`
-- **File a Report**: `/report-child`
-- **Submit Sighting**: `/report-sighting`
-- **Helpline**: `/contact-us`
+MCRN uses PostgreSQL across all modules.
 
-### 2. Police Operations Portal
-- **Officer Login**: `/login` (Select "Police" tab) or `/police-login`
-- **Dashboard & Case Feed**: `/police-dashboard`
-- **Sighting Verification**: `/police-verify`
-- **Search Records**: `/police-search`
-- **Profile & Logout**: `/police-profile`
+To initialize or verify the schema tables:
+```bash
+npm run init-db
+# Or: node database/scripts/init-db.js
+```
 
-### 3. Administrator Portal
-- **Admin Access**: `/admin`
-- **Default Credentials**: Default password configured in `.env` (`ADMIN_DEFAULT_PASSWORD`).
-- **Features**: Case verification, priority assigning, officer case delegation, user accounts management, system audit logs, metrics and analytics.
+Verified schema tables:
+- `users`: Citizen, police, and administrator accounts
+- `police_profiles`: Law enforcement officer badge and departmental data
+- `police_users`: Police credentials and official identifiers
+- `children`: Centralized directory of missing children
+- `missing_child_reports`: Citizen report submissions with photo URLs
+- `missing_cases`: Police case investigation records
+- `case_assignments`: Case delegation and tracking
+- `sightings`: Public sighting submissions with verification status
+- `notifications`: Broadcast alerts for cases and status updates
+- `audit_logs`: Administrative activity and investigation logs
+- `admin_settings`: System configuration and alert parameters
+- `otp_tokens`: One-time password verification tokens with expiration and consumption tracking
+- `email_suppressions`: Delivery bounce and suppression tracking
+- `case_resolution_evidence`: Case closure documentation
 
 ---
 
-## Testing & Validation
+## Supabase Storage Integration
 
-Verify database connectivity and schema tables:
+Production image uploads for missing child reports and police sightings use **Supabase Storage**.
+
+1. Create a Supabase project at https://supabase.com.
+2. In the Supabase Dashboard, create a storage bucket named `missing-child-images` (or set `SUPABASE_STORAGE_BUCKET`).
+3. Set bucket access to **Public** for image display.
+4. Add the following to your environment:
+   ```env
+   SUPABASE_URL=https://your-project.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+   SUPABASE_STORAGE_BUCKET=missing-child-images
+   ```
+
+When an image is submitted via `/api/report-child` or `/api/sightings`, MCRN streams the buffer directly to Supabase Storage and returns a permanent public URL, ensuring files persist across serverless restarts.
+
+---
+
+## SMTP & Email Service Configuration
+
+Account verification and password recovery use SMTP email delivery.
+
+Configure in `.env`:
+```env
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_SECURE=false
+MAIL_REQUIRE_TLS=true
+MAIL_USERNAME=your_email@gmail.com
+MAIL_PASSWORD=your_gmail_app_password
+MAIL_FROM=MCRN Security <your_email@gmail.com>
+```
+
+### Safety Features
+- **Isolated Development Mode**: Set `MCRN_DEV_OTP_MODE=true` during testing to log OTP codes to the terminal and suppress live remote transmission to fictional/placeholder addresses.
+- **Recipient Domain Protection**: Delivery to known test/placeholder domains (`example.com`, `mcrn-test.org`, `police.mcrn.org`) is automatically classified and isolated.
+- **Log Masking**: Recipient addresses are automatically masked in logs (e.g., `u***r@example.com`) to protect personal data.
+
+---
+
+## Testing Commands
+
+MCRN includes a complete automated test suite:
+
 ```bash
+# 1. Syntax check & frontend production build
+npm run check
+
+# 2. Database connectivity & schema tables check
 node tests/db-test.js
-```
 
-Verify backend APIs while services are running:
-```bash
+# 3. Email safety, masking, and SMTP transporter tests
+node tests/email-delivery-tests.js
+
+# 4. End-to-end API, health, and multi-portal tests (requires backend running)
 node tests/api-tests.js
+
+# 5. OTP lifecycle: registration, cooldown, expiration, consumption, reset
+node tests/otp-lifecycle-tests.js
+
+# 6. Supabase Storage cross-device upload and retrieval test
+node tests/supabase-storage-e2e.js
+
+# 7. Cross-role workflow verification suite (Citizen, Admin, Police)
+node tests/workflow-tests.js
 ```
 
 ---
 
-## Troubleshooting
+## Vercel Deployment Instructions
 
-- **Port in Use**: If ports 5173 or 5000 are already bound, run `killall node` or stop the conflicting process before restarting `./start.sh`.
-- **Database Connection Error**: Verify that `DATABASE_URL` is accessible from your network and that `PG_SSL` is set to `true` for cloud database providers.
-- **Upload Errors**: Verify Supabase Storage credentials (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`) in `.env`.
-deployment setup for missing child rescue network
+MCRN is pre-configured for deployment as **ONE integrated project on Vercel**.
+
+### Deployment Architecture
+
+```text
+ONE VERCEL PROJECT
+       │
+       ├── Multi-Page Vite Frontend (Static CDN)
+       │   ├── /                 → index.html (Landing & Auth)
+       │   ├── /login, /register → index.html
+       │   ├── /user-dashboard   → user.html (Citizen Portal)
+       │   ├── /police-dashboard → police.html (Police Portal)
+       │   ├── /admin/*          → admin.html (Admin Portal)
+       │   ├── /contact-us       → contact.html (Emergency Helpline)
+       │   └── /reporting        → reporting.html (Reporting Portal)
+       │
+       └── Unified Express Backend (Serverless Function)
+           └── /api/*, /health   → api/index.js
+```
+
+### Step-by-Step Vercel Deployment
+
+1. **Import Repository**:
+   - In Vercel, select **Add New Project** and import `lavanyatangellapalli24/Missing_child_Rescue_Network`.
+   - Select branch: `vercel-deployment`.
+
+2. **Project Settings**:
+   - **Root Directory**: `.` (leave as root)
+   - **Framework Preset**: `Other` (configured via `vercel.json`)
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `frontend/dist`
+   - **Install Command**: `npm install`
+
+3. **Configure Environment Variables in Vercel**:
+   Add the following variables in **Project Settings > Environment Variables**:
+
+   | Variable | Description | Example / Note |
+   |---|---|---|
+   | `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@host:5432/db` |
+   | `PG_SSL` | Enable SSL for PostgreSQL | `true` |
+   | `JWT_SECRET` | Secret key for JWT session tokens | Min 32 chars random string |
+   | `JWT_EXPIRES_IN` | Session expiration window | `1h` |
+   | `CORS_ORIGINS` | Allowed CORS origins | `*` or your Vercel domain |
+   | `MAIL_HOST` | SMTP server host | `smtp.gmail.com` |
+   | `MAIL_PORT` | SMTP port | `587` |
+   | `MAIL_SECURE` | SSL transport | `false` |
+   | `MAIL_REQUIRE_TLS` | Require TLS | `true` |
+   | `MAIL_USERNAME` | SMTP account email | `your-org@gmail.com` |
+   | `MAIL_PASSWORD` | SMTP application password | 16-character App Password |
+   | `MAIL_FROM` | Sender display string | `MCRN Security <your-org@gmail.com>` |
+   | `ADMIN_DEFAULT_PASSWORD` | Initial admin account password | Strong secret password |
+   | `ADMIN_EMAILS` | Comma-separated admin emails | `admin@example.com` |
+   | `RESET_SECRET` | Secret for admin password resets | Random string |
+   | `SUPABASE_URL` | Supabase project URL | `https://xxxx.supabase.co` |
+   | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service-role secret | Server-side only key |
+   | `SUPABASE_STORAGE_BUCKET` | Storage bucket name | `missing-child-images` |
+
+4. **Deploy**:
+   - Click **Deploy**. Vercel will install dependencies, build the frontend with all 6 entry points, and bundle `api/index.js` as the serverless API handler.
+
+---
+
+## Security Instructions
+
+1. **No Credentials in Git**: Never commit `.env` or files containing live credentials. All `.env*` files except `.env.example` and `.env.cloud.example` are strictly excluded by `.gitignore`.
+2. **Server-Side Secrets**: `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`, and `MAIL_PASSWORD` must only be configured in server-side environment variables. They are never exposed to frontend code or client bundles.
+3. **Stateless Serverless Execution**: `api/index.js` runs statelessly without relying on persistent local disk storage. All uploaded media must use Supabase Storage in production.
+4. **Least-Privilege Database Access**: Use connection pooling with standard transaction timeouts for serverless PostgreSQL connectivity.

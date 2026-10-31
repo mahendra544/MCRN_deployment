@@ -4,7 +4,7 @@ const dotenv = require("dotenv");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
-const { requirePolice, requireAnyUser } = require("../middleware");
+const { requirePolice, requireAnyUser, requireAuth } = require("../middleware");
 const { ensurePoliceSchema } = require("./schema");
 const db = require("../db");
 const { uploadChildImage, supabase } = require("../config/supabase");
@@ -50,17 +50,7 @@ ensurePoliceSchema(db).then(() => {
 app.use("/api/police", requirePolice);
 app.use("/api/notifications", requireAnyUser);
 
-function requireUserOrPolice(req, res, next) {
-  try {
-    const h = req.headers.authorization || "";
-    if (!/^Bearer\s+/i.test(h)) return res.status(401).json({ message: "Authentication required" });
-    const jwt = require("jsonwebtoken");
-    const user = jwt.verify(h.replace(/^Bearer\s+/i, ""), process.env.JWT_SECRET);
-    if (!["USER", "POLICE", "ADMIN"].includes(user.role)) return res.status(403).json({ message: "Forbidden" });
-    req.user = user;
-    next();
-  } catch { return res.status(401).json({ message: "Invalid or expired session" }); }
-}
+const requireUserOrPolice = requireAuth(["USER", "POLICE", "ADMIN"]);
 
 // ======================================================
 // MULTER CONFIGURATION
