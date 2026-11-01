@@ -220,6 +220,40 @@ async function runEmailTests() {
       && capturedRequest.body.body === "Case #1 has been assigned."
       && capturedRequest.body.htmlBody === "<p>Case #1 has been assigned.</p>");
 
+    const makeConnectTimeoutError = () => {
+      const attempts = [
+        Object.assign(new Error("Hidden connection detail"), {
+          code: "ETIMEDOUT", syscall: "connect", family: 4, port: 443, address: "203.0.113.10"
+        })
+      ];
+      const cause = new AggregateError(attempts, "Network failure details must not be logged");
+      cause.code = "ETIMEDOUT";
+      cause.hostname = "script.google.com";
+      const error = new TypeError("fetch failed");
+      error.cause = cause;
+      return error;
+    };
+
+    let retryCount = 0;
+    global.fetch = async () => {
+      retryCount++;
+      if (retryCount === 1) throw makeConnectTimeoutError();
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true })
+      };
+    };
+    const retriedDelivery = await sendMailSafe({
+      to: recipient,
+      subject: "Google Apps Script connection retry test",
+      text: "MCRN retry test",
+      purpose: "EMAIL_DELIVERY_TEST"
+    });
+    test("Retries a confirmed pre-connection failure once", retryCount === 2
+      && retriedDelivery.accepted === true
+      && retriedDelivery.status === "ACCEPTED_BY_GOOGLE_APPS_SCRIPT");
+
     global.fetch = async () => new Response(JSON.stringify({
       success: false
     }), {
@@ -258,19 +292,46 @@ async function runEmailTests() {
         && error.code === "GOOGLE_APPS_SCRIPT_REJECTED");
     }
 
+    let failedAttemptCount = 0;
     global.fetch = async () => {
-      const error = new Error("Network timeout while sending");
-      error.code = "ETIMEDOUT";
-      throw error;
+      failedAttemptCount++;
+      throw makeConnectTimeoutError();
     };
+    const previousConsoleError = console.error;
+    const previousConsoleWarn = console.warn;
+    const errorLogs = [];
+    const warningLogs = [];
+    console.error = (...args) => errorLogs.push(args.join(" "));
+    console.warn = (...args) => warningLogs.push(args.join(" "));
     try {
       await sendMailSafe({ to: recipient, subject: "Network timeout test", text: "Not delivered" });
       test("Handles network timeout without claiming delivery", false);
     } catch (error) {
-      test("Handles network timeout without claiming delivery", error.status === 503
+      test("Handles persistent fetch network errors without claiming delivery", error.status === 503
         && error.code === "GOOGLE_APPS_SCRIPT_NETWORK_ERROR"
-        && !error.message.includes(recipient));
+        && !error.message.includes(recipient)
+        && failedAttemptCount === 2);
+    } finally {
+      console.error = previousConsoleError;
+      console.warn = previousConsoleWarn;
     }
+    const networkLog = errorLogs.join("\n");
+    const retryLog = warningLogs.join("\n");
+    test("Logs safe network cause details", networkLog.includes("name=TypeError")
+      && networkLog.includes("causeCode=ETIMEDOUT")
+      && networkLog.includes("host=script.google.com")
+      && networkLog.includes("attempts=code=ETIMEDOUT syscall=connect family=4 port=443"));
+    test("Retries at most once and logs only safe connection metadata", failedAttemptCount === 2
+      && retryLog.includes("Retrying Google Apps Script request once")
+      && !retryLog.includes(recipient)
+      && !retryLog.includes(process.env.MCRN_SECRET)
+      && !retryLog.includes("203.0.113.10"));
+    test("Network diagnostics omit endpoint path, secret, recipient, and error message", !networkLog.includes(recipient)
+      && !networkLog.includes(process.env.MCRN_SECRET)
+      && !networkLog.includes("test-deployment")
+      && !networkLog.includes("Network failure details must not be logged")
+      && !networkLog.includes("Hidden connection detail")
+      && !networkLog.includes("203.0.113.10"));
   } finally {
     global.fetch = previousFetch;
     if (previousUrl === undefined) delete process.env.GOOGLE_APPS_SCRIPT_URL;

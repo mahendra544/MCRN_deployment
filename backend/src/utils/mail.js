@@ -386,6 +386,54 @@ function getEmailErrorCode(error) {
   return String(code).replace(/[^A-Za-z0-9_-]/g, "").slice(0, 64) || "EMAIL_DELIVERY_ERROR";
 }
 
+function getSafeLogValue(value) {
+  return String(value || "none").replace(/[^A-Za-z0-9_.-]/g, "").slice(0, 64) || "none";
+}
+
+function isRetryableConnectFailure(error) {
+  const failures = error?.cause instanceof AggregateError ? error.cause.errors : null;
+  return Array.isArray(failures) && failures.length > 0 && failures.every((failure) =>
+    failure?.syscall === "connect" &&
+    ["ETIMEDOUT", "ECONNREFUSED", "EHOSTUNREACH", "ENETUNREACH"].includes(failure.code)
+  );
+}
+
+function getSafeNetworkDetails(error, url) {
+  const cause = error?.cause;
+  const endpointHost = (() => {
+    try {
+      const hostname = new URL(url).hostname;
+      return hostname === "script.google.com" || hostname.endsWith(".googleusercontent.com")
+        ? hostname
+        : "configured-endpoint";
+    } catch (_) {
+      return "configured-endpoint";
+    }
+  })();
+  const causeHost = typeof cause?.hostname === "string" &&
+    (cause.hostname === "script.google.com" || cause.hostname.endsWith(".googleusercontent.com"))
+    ? cause.hostname
+    : endpointHost;
+  const attempts = Array.isArray(cause?.errors)
+    ? cause.errors.slice(0, 4).map((attempt) => [
+      `code=${getSafeLogValue(attempt?.code)}`,
+      `syscall=${["connect", "getaddrinfo", "read", "write"].includes(attempt?.syscall) ? attempt.syscall : "unknown"}`,
+      `family=${[4, 6].includes(attempt?.family) ? attempt.family : "unknown"}`,
+      `port=${Number.isInteger(attempt?.port) && attempt.port > 0 && attempt.port <= 65535 ? attempt.port : "unknown"}`
+    ].join(" ")).join(";")
+    : "none";
+
+  return [
+    `name=${getSafeLogValue(error?.name)}`,
+    `code=${getSafeLogValue(error?.code)}`,
+    `cause=${getSafeLogValue(cause?.name)}`,
+    `causeCode=${getSafeLogValue(cause?.code)}`,
+    `syscall=${["connect", "getaddrinfo", "read", "write"].includes(cause?.syscall) ? cause.syscall : "unknown"}`,
+    `host=${causeHost}`,
+    `attempts=${attempts}`
+  ].join(" ");
+}
+
 // ----------------------------------------------------
 // EMAIL HTML TEMPLATES
 // ----------------------------------------------------
@@ -469,14 +517,25 @@ async function sendMailSafe({ to, subject, html, text, from, isTestContext = fal
     ...(html ? { htmlBody: html } : {})
   };
 
+  const requestStartedAt = Date.now();
   try {
-    const response = await fetch(config.url, {
-      method: "POST",
-      redirect: "follow",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(GOOGLE_APPS_SCRIPT_REQUEST_TIMEOUT_MS)
-    });
+    const requestBody = JSON.stringify(payload);
+    let response;
+    for (let attempt = 0; ; attempt++) {
+      try {
+        response = await fetch(config.url, {
+          method: "POST",
+          redirect: "follow",
+          headers: { "content-type": "application/json" },
+          body: requestBody,
+          signal: AbortSignal.timeout(GOOGLE_APPS_SCRIPT_REQUEST_TIMEOUT_MS)
+        });
+        break;
+      } catch (error) {
+        if (attempt !== 0 || !isRetryableConnectFailure(error)) throw error;
+        console.warn(`[EMAIL] Retrying Google Apps Script request once after a connection failure (${getSafeNetworkDetails(error, config.url)}).`);
+      }
+    }
 
     let result;
     try {
@@ -505,10 +564,14 @@ async function sendMailSafe({ to, subject, html, text, from, isTestContext = fal
   } catch (err) {
     if (err.status && err.code) throw err;
 
-    const code = getEmailErrorCode(err);
-    console.error(`[EMAIL] Google Apps Script request failed for ${maskEmail(to)} [${code}].`);
+    const code = getEmailErrorCode(err?.cause || err);
+    const elapsedMs = Date.now() - requestStartedAt;
+    console.error(`[EMAIL] Google Apps Script request failed for ${maskEmail(to)} [${code}] after ${elapsedMs}ms (${getSafeNetworkDetails(err, config.url)}).`);
     const dispatchError = new Error("Email delivery could not be completed. Please try again later.");
-    dispatchError.code = ["TypeError", "TimeoutError", "ETIMEDOUT", "ECONNRESET", "ECONNREFUSED", "EAI_AGAIN"].includes(code)
+    dispatchError.code = [
+      "TypeError", "TimeoutError", "ETIMEDOUT", "ECONNRESET", "ECONNREFUSED", "EAI_AGAIN",
+      "ENOTFOUND", "EHOSTUNREACH", "ENETUNREACH", "UND_ERR_CONNECT_TIMEOUT", "UND_ERR_HEADERS_TIMEOUT"
+    ].includes(code)
       ? "GOOGLE_APPS_SCRIPT_NETWORK_ERROR"
       : code;
     dispatchError.status = 503;
