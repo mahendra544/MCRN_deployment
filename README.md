@@ -213,13 +213,24 @@ When an image is submitted via `/api/report-child` or `/api/sightings`, MCRN str
 
 ## Google Apps Script Email Service Configuration
 
-Authentication OTPs, admin password-reset emails, and police notifications are sent to the configured Google Apps Script Web App over HTTPS. Configure the Web App URL and its shared secret only in the backend environment (local `.env` or the Render backend Environment settings):
+User and police OTPs and police notifications are sent to the configured Google Apps Script Web App over HTTPS. Admin password-reset emails remain on their separate Nodemailer SMTP transport. Configure the Apps Script URL and shared secret only in the backend environment (local `.env` or Render backend Environment settings):
 ```env
 GOOGLE_APPS_SCRIPT_URL=
 MCRN_SECRET=
 ```
 
 The Web App should accept JSON `POST` requests with `secret`, `to`, `subject`, and `body`, plus `htmlBody` when available. It must return JSON containing `"success": true` only after accepting the email. Google Apps Script redirects are followed by the backend, which checks the final JSON response rather than trusting an HTTP 200 status alone. Keep both values secret/server-side; do not put them in frontend configuration.
+
+Admin password-reset links use Nodemailer with separate backend SMTP settings:
+```env
+EMAIL_USER=
+EMAIL_PASS=
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_REQUIRE_TLS=true
+```
+Keep these SMTP credentials server-side. They do not configure or affect the Google Apps Script mailer.
 
 To send a diagnostic email, explicitly configure the test inbox first:
 ```bash
@@ -310,6 +321,9 @@ ONE VERCEL PROJECT
    | `CORS_ORIGINS` | Allowed frontend origins | Explicit Vercel domain(s), comma-separated |
    | `GOOGLE_APPS_SCRIPT_URL` | Google Apps Script Web App deployment URL | HTTPS URL; backend only |
    | `MCRN_SECRET` | Shared secret expected by the email Web App | Configure privately on both backend and Apps Script |
+   | `EMAIL_USER` / `EMAIL_PASS` | Admin password-reset SMTP account | Backend-only SMTP credentials |
+   | `SMTP_HOST` / `SMTP_PORT` | Admin SMTP server | `smtp.gmail.com` / `587` |
+   | `SMTP_SECURE` / `SMTP_REQUIRE_TLS` | Admin SMTP transport security | `false` / `true` for Gmail STARTTLS |
    | `ADMIN_DEFAULT_PASSWORD` | Initial admin account password | Strong secret password |
    | `ADMIN_EMAILS` | Comma-separated admin emails | `admin@example.com` |
    | `RESET_SECRET` | Secret for admin password resets | Random string |

@@ -5,6 +5,7 @@ if (nodeDns && nodeDns.setDefaultResultOrder) {
   nodeDns.setDefaultResultOrder("ipv4first");
 }
 const dns = nodeDns.promises;
+const nodemailer = require("nodemailer");
 
 let pool = null;
 try {
@@ -600,6 +601,21 @@ async function sendOtp(to, otp, purpose, options = {}) {
   });
 }
 
+function getAdminSmtpConfig() {
+  const user = (process.env.EMAIL_USER || "").trim();
+  const password = process.env.EMAIL_PASS || "";
+  const host = (process.env.SMTP_HOST || "smtp.gmail.com").trim();
+  const port = Number(process.env.SMTP_PORT || 587);
+  const secure = String(process.env.SMTP_SECURE || "false").toLowerCase() === "true";
+  const requireTLS = String(process.env.SMTP_REQUIRE_TLS || "true").toLowerCase() === "true";
+
+  if (!user || !password || !host || !Number.isInteger(port) || port < 1 || port > 65535) {
+    return null;
+  }
+
+  return { user, password, host, port, secure, requireTLS };
+}
+
 async function sendAdminPasswordReset(to, resetLink) {
   const subject = "Reset Your Admin Portal Password";
   const text = `Hello,\n\nYou requested to reset your Admin Portal password.\n\nClick the link below to create a new password:\n${resetLink}\n\nThis link will expire in 15 minutes.\n\nIf you did not request this password reset, you can ignore this email.\n\nMissing Child Rescue Network`;
@@ -619,13 +635,47 @@ async function sendAdminPasswordReset(to, resetLink) {
 </body>
 </html>`;
 
-  return sendMailSafe({
-    to,
-    subject,
-    text,
-    html,
-    purpose: "ADMIN_PASSWORD_RESET"
+  const config = getAdminSmtpConfig();
+  if (!config) {
+    const error = new Error("Admin email delivery is not configured. Please contact support.");
+    error.code = "ADMIN_SMTP_NOT_CONFIGURED";
+    error.status = 503;
+    throw error;
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: config.host,
+    port: config.port,
+    secure: config.secure,
+    requireTLS: config.requireTLS,
+    auth: {
+      user: config.user,
+      pass: config.password
+    }
   });
+
+  try {
+    const result = await transporter.sendMail({
+      from: config.user,
+      to,
+      subject,
+      text,
+      html
+    });
+    console.log(`[ADMIN_EMAIL] Nodemailer accepted password-reset email for ${maskEmail(to)}.`);
+    return {
+      accepted: true,
+      status: "ACCEPTED_BY_SMTP",
+      messageId: result.messageId,
+      recipient: maskEmail(to)
+    };
+  } catch (error) {
+    console.error(`[ADMIN_EMAIL] Nodemailer password-reset delivery failed for ${maskEmail(to)} [${getSafeLogValue(error?.code || error?.name)}].`);
+    const dispatchError = new Error("Admin password-reset email could not be sent. Please try again later.");
+    dispatchError.code = "ADMIN_SMTP_DELIVERY_FAILED";
+    dispatchError.status = 503;
+    throw dispatchError;
+  }
 }
 
 async function sendPoliceNotification({ officerId, officerEmail, subject, text, html }) {

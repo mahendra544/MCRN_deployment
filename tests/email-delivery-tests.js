@@ -1,6 +1,9 @@
 const path = require("path");
 require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 const assert = require("assert");
+const nodemailer = require(require.resolve("nodemailer", {
+  paths: [path.resolve(__dirname, "../backend")]
+}));
 const {
   validateRecipientEmail,
   checkDomainDeliverability,
@@ -205,10 +208,55 @@ async function runEmailTests() {
       && capturedRequest.body.body.includes("Verification Code: 654321")
       && capturedRequest.body.htmlBody.includes("654321"));
 
-    await sendAdminPasswordReset(recipient, "https://mcrn.example/admin/reset-password/token");
-    test("Sends admin password-reset email with its existing content", capturedRequest.body.subject === "Reset Your Admin Portal Password"
-      && capturedRequest.body.body.includes("https://mcrn.example/admin/reset-password/token")
-      && capturedRequest.body.htmlBody.includes("https://mcrn.example/admin/reset-password/token"));
+    const previousSmtpEnv = {
+      EMAIL_USER: process.env.EMAIL_USER,
+      EMAIL_PASS: process.env.EMAIL_PASS,
+      SMTP_HOST: process.env.SMTP_HOST,
+      SMTP_PORT: process.env.SMTP_PORT,
+      SMTP_SECURE: process.env.SMTP_SECURE,
+      SMTP_REQUIRE_TLS: process.env.SMTP_REQUIRE_TLS
+    };
+    const previousCreateTransport = nodemailer.createTransport;
+    const previousFetchRequest = capturedRequest;
+    let capturedSmtpOptions;
+    let capturedAdminMessage;
+    process.env.EMAIL_USER = "admin-mailer@example.test";
+    process.env.EMAIL_PASS = "unit-test-smtp-password";
+    process.env.SMTP_HOST = "smtp.example.test";
+    process.env.SMTP_PORT = "587";
+    process.env.SMTP_SECURE = "false";
+    process.env.SMTP_REQUIRE_TLS = "true";
+    nodemailer.createTransport = (options) => {
+      capturedSmtpOptions = options;
+      return {
+        sendMail: async (message) => {
+          capturedAdminMessage = message;
+          return { messageId: "admin-reset-test-message" };
+        }
+      };
+    };
+    try {
+      const adminResult = await sendAdminPasswordReset(recipient, "https://mcrn.example/admin/reset-password/token");
+      test("Admin reset uses Nodemailer SMTP configuration", adminResult.accepted === true
+        && adminResult.status === "ACCEPTED_BY_SMTP"
+        && capturedSmtpOptions.host === process.env.SMTP_HOST
+        && capturedSmtpOptions.port === 587
+        && capturedSmtpOptions.secure === false
+        && capturedSmtpOptions.requireTLS === true
+        && capturedSmtpOptions.auth.user === process.env.EMAIL_USER
+        && capturedSmtpOptions.auth.pass === process.env.EMAIL_PASS);
+      test("Admin reset preserves email template and does not call Apps Script", capturedRequest === previousFetchRequest
+        && capturedAdminMessage.to === recipient
+        && capturedAdminMessage.subject === "Reset Your Admin Portal Password"
+        && capturedAdminMessage.text.includes("https://mcrn.example/admin/reset-password/token")
+        && capturedAdminMessage.html.includes("https://mcrn.example/admin/reset-password/token"));
+    } finally {
+      nodemailer.createTransport = previousCreateTransport;
+      for (const [key, value] of Object.entries(previousSmtpEnv)) {
+        if (value === undefined) delete process.env[key];
+        else process.env[key] = value;
+      }
+    }
 
     await sendPoliceNotification({
       officerEmail: recipient,

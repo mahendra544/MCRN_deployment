@@ -1,6 +1,6 @@
 # MCRN Google Apps Script Email Configuration
 
-MCRN sends registration and password-reset OTPs, admin password-reset links, and police notifications through a Google Apps Script Web App over HTTPS.
+MCRN sends user and police registration/password-reset OTPs and police notifications through a Google Apps Script Web App over HTTPS. Admin password-reset links are deliberately excluded and continue using the separate Nodemailer SMTP configuration.
 
 ## Configure the Web App
 
