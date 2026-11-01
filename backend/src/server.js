@@ -26,7 +26,7 @@ async function startServer() {
   });
 
   verifyMailer().catch((err) => {
-    console.warn("[SMTP] Startup diagnostic failed:", err.code || "unknown error");
+    console.warn("[EMAIL] Startup configuration check failed:", err.code || "unknown error");
   });
 
   const primaryServer = http.createServer(app);

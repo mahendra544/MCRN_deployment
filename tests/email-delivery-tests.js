@@ -7,7 +7,6 @@ const {
   isPlaceholderOrTestDomain,
   isTestRecipient,
   maskEmail,
-  createTransporter,
   verifyMailer,
   sendOtp,
   sendMailSafe,
@@ -104,12 +103,16 @@ async function runEmailTests() {
   // TEST 5: Isolated Development OTP Mechanism
   // ----------------------------------------------------
   console.log("\n--- 5. Isolated Development Mode Delivery ---");
-  // Test address in test context should be accepted for simulated dispatch WITHOUT calling SMTP
+  const previousTestRecipient = process.env.TEST_EMAIL_RECIPIENT;
+  delete process.env.TEST_EMAIL_RECIPIENT;
+  // Test address in test context should be accepted for simulated dispatch without calling the remote email service
   const isolatedResult = await sendOtp("test_otp_verify_99999@mcrn-test.org", "654321", "REGISTRATION_VERIFICATION", { isTestContext: true });
   test("Test address handled via isolated dev mode", isolatedResult.accepted === true && (isolatedResult.status === "ISOLATED_DEV_SIMULATED" || isolatedResult.status === "TEST_DELIVERY_REDIRECTED"));
 
   const officerIsolatedResult = await sendOtp("officer_b_1791351349128@police.mcrn.org", "123456", "REGISTRATION_VERIFICATION", { isTestContext: true });
   test("Generated officer address handled via isolated dev mode", officerIsolatedResult.accepted === true && (officerIsolatedResult.status === "ISOLATED_DEV_SIMULATED" || officerIsolatedResult.status === "TEST_DELIVERY_REDIRECTED"));
+  if (previousTestRecipient === undefined) delete process.env.TEST_EMAIL_RECIPIENT;
+  else process.env.TEST_EMAIL_RECIPIENT = previousTestRecipient;
 
   // ----------------------------------------------------
   // TEST 6: Permanent Failure Suppression
@@ -131,14 +134,150 @@ async function runEmailTests() {
   test("Can clear suppression after resolution", !(await isSuppressed(testFailEmail)));
 
   // ----------------------------------------------------
-  // TEST 7: SMTP Transporter Configuration & Connection Verification
+  // TEST 7: Google Apps Script Configuration, Redirects, Responses, and Failures
   // ----------------------------------------------------
-  console.log("\n--- 7. SMTP Transporter & Connection Verification ---");
-  const transporterInstance = createTransporter();
-  test("Creates valid transporter from environment variables", transporterInstance !== null);
+  console.log("\n--- 7. Google Apps Script Configuration & Delivery ---");
+  const previousUrl = process.env.GOOGLE_APPS_SCRIPT_URL;
+  const previousSecret = process.env.MCRN_SECRET;
+  const previousFetch = global.fetch;
+  process.env.GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/test-deployment/exec";
+  process.env.MCRN_SECRET = "test-google-apps-script-secret";
 
-  const verifySuccess = await verifyMailer();
-  test("SMTP connection verification executes safely", typeof verifySuccess === "boolean");
+  try {
+    test("Google Apps Script configuration verification executes safely", await verifyMailer() === true);
+    process.env.GOOGLE_APPS_SCRIPT_URL = "http://script.google.com/macros/s/test-deployment/exec";
+    test("Rejects non-HTTPS Apps Script configuration", await verifyMailer() === false);
+    process.env.GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/test-deployment/exec";
+
+    const recipient = "mcrn_google_apps_script_test_2026@gmail.com";
+    let capturedRequest;
+    global.fetch = async (url, options) => {
+      capturedRequest = { url, options, body: JSON.parse(options.body) };
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      });
+    };
+    const delivered = await sendMailSafe({
+      to: recipient,
+      subject: "Google Apps Script success test",
+      text: "MCRN email body test",
+      html: "<p>MCRN HTML body test</p>",
+      purpose: "EMAIL_DELIVERY_TEST"
+    });
+    test("Accepts final successful Google Apps Script JSON response", delivered.accepted === true
+      && delivered.status === "ACCEPTED_BY_GOOGLE_APPS_SCRIPT");
+    test("POSTs to the configured endpoint and follows Apps Script redirects", Boolean(capturedRequest)
+      && capturedRequest.url === process.env.GOOGLE_APPS_SCRIPT_URL
+      && capturedRequest.options.method === "POST"
+      && capturedRequest.options.redirect === "follow");
+    test("Sends configured secret, recipient, subject, body, and HTML body", Boolean(capturedRequest)
+      && capturedRequest.body.secret === process.env.MCRN_SECRET
+      && capturedRequest.body.to === recipient
+      && capturedRequest.body.subject === "Google Apps Script success test"
+      && capturedRequest.body.body === "MCRN email body test"
+      && capturedRequest.body.htmlBody === "<p>MCRN HTML body test</p>");
+
+    await sendMailSafe({
+      to: recipient,
+      subject: "Google Apps Script text-only test",
+      text: "MCRN text-only body test",
+      purpose: "EMAIL_DELIVERY_TEST"
+    });
+    test("Omits htmlBody when no HTML template is available", !Object.hasOwn(capturedRequest.body, "htmlBody")
+      && capturedRequest.body.body === "MCRN text-only body test");
+
+    global.fetch = async (url, options) => {
+      capturedRequest = { url, options, body: JSON.parse(options.body) };
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      });
+    };
+    const otpResult = await sendOtp(recipient, "123456", "PASSWORD_RESET");
+    test("Sends forgot-password OTP with the existing template", otpResult.accepted === true
+      && capturedRequest.body.subject === "[MCRN] Reset Your Password"
+      && capturedRequest.body.body.includes("Verification Code: 123456")
+      && capturedRequest.body.htmlBody.includes("123456"));
+
+    await sendOtp(recipient, "654321", "REGISTRATION_VERIFICATION");
+    test("Sends registration OTP with the existing template", capturedRequest.body.subject === "[MCRN] Verify Your Account"
+      && capturedRequest.body.body.includes("Verification Code: 654321")
+      && capturedRequest.body.htmlBody.includes("654321"));
+
+    await sendAdminPasswordReset(recipient, "https://mcrn.example/admin/reset-password/token");
+    test("Sends admin password-reset email with its existing content", capturedRequest.body.subject === "Reset Your Admin Portal Password"
+      && capturedRequest.body.body.includes("https://mcrn.example/admin/reset-password/token")
+      && capturedRequest.body.htmlBody.includes("https://mcrn.example/admin/reset-password/token"));
+
+    await sendPoliceNotification({
+      officerEmail: recipient,
+      subject: "New Case Assignment: Case #1",
+      text: "Case #1 has been assigned.",
+      html: "<p>Case #1 has been assigned.</p>"
+    });
+    test("Sends police notification with its existing content", capturedRequest.body.subject === "[MCRN Police Alert] New Case Assignment: Case #1"
+      && capturedRequest.body.body === "Case #1 has been assigned."
+      && capturedRequest.body.htmlBody === "<p>Case #1 has been assigned.</p>");
+
+    global.fetch = async () => new Response(JSON.stringify({
+      success: false
+    }), {
+      status: 200,
+      headers: { "content-type": "application/json" }
+    });
+    try {
+      await sendMailSafe({ to: recipient, subject: "Script failure test", text: "Not delivered" });
+      test("Rejects HTTP 200 with unsuccessful JSON without claiming delivery", false);
+    } catch (error) {
+      test("Rejects HTTP 200 with unsuccessful JSON without claiming delivery", error.status === 503
+        && error.code === "GOOGLE_APPS_SCRIPT_REJECTED");
+    }
+
+    global.fetch = async () => new Response("not JSON", {
+      status: 200,
+      headers: { "content-type": "text/plain" }
+    });
+    try {
+      await sendMailSafe({ to: recipient, subject: "Invalid response test", text: "Not delivered" });
+      test("Rejects non-JSON final response without claiming delivery", false);
+    } catch (error) {
+      test("Rejects non-JSON final response without claiming delivery", error.status === 503
+        && error.code === "GOOGLE_APPS_SCRIPT_INVALID_RESPONSE");
+    }
+
+    global.fetch = async () => new Response(JSON.stringify({ success: true }), {
+      status: 500,
+      headers: { "content-type": "application/json" }
+    });
+    try {
+      await sendMailSafe({ to: recipient, subject: "HTTP failure test", text: "Not delivered" });
+      test("Rejects non-2xx response without claiming delivery", false);
+    } catch (error) {
+      test("Rejects non-2xx response without claiming delivery", error.status === 503
+        && error.code === "GOOGLE_APPS_SCRIPT_REJECTED");
+    }
+
+    global.fetch = async () => {
+      const error = new Error("Network timeout while sending");
+      error.code = "ETIMEDOUT";
+      throw error;
+    };
+    try {
+      await sendMailSafe({ to: recipient, subject: "Network timeout test", text: "Not delivered" });
+      test("Handles network timeout without claiming delivery", false);
+    } catch (error) {
+      test("Handles network timeout without claiming delivery", error.status === 503
+        && error.code === "GOOGLE_APPS_SCRIPT_NETWORK_ERROR"
+        && !error.message.includes(recipient));
+    }
+  } finally {
+    global.fetch = previousFetch;
+    if (previousUrl === undefined) delete process.env.GOOGLE_APPS_SCRIPT_URL;
+    else process.env.GOOGLE_APPS_SCRIPT_URL = previousUrl;
+    if (previousSecret === undefined) delete process.env.MCRN_SECRET;
+    else process.env.MCRN_SECRET = previousSecret;
+  }
 
   // ----------------------------------------------------
   // TEST 8: Police Notification Recipient Selection

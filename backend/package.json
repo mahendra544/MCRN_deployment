@@ -6,9 +6,9 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node src/server.js",
-    "build":"echo Build completed",
+    "build": "echo Build completed",
     "init-db": "node ../database/scripts/init-db.js",
-    "smtp:check": "node scripts/smtp-diagnostic.js"
+    "email:diagnostic": "node scripts/google-apps-script-diagnostic.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",
@@ -20,7 +20,6 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
-    "nodemailer": "^6.9.14",
     "pg": "^8.23.1",
     "zod": "^3.23.8"
   }

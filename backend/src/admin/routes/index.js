@@ -3,7 +3,6 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const policeRoutes = require("./policeRoutes");
-const nodemailer = require("nodemailer");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const db = require("../../db");
@@ -99,13 +98,7 @@ const ADMIN_DETAILS = {
 // EMAIL CONFIGURATION
 // =====================================================
 
-const { sendAdminPasswordReset, sendPoliceNotification, maskEmail, createTransporter } = require("../../utils/mail");
-const transporter = createTransporter();
-if (transporter) {
-    console.log("✅ Admin email module configured and connected to shared mail utility");
-} else {
-    console.log("ℹ️ Admin email delivery is disabled. Set MAIL_USERNAME/MAIL_PASSWORD or EMAIL_USER/EMAIL_PASS to enable it.");
-}
+const { sendAdminPasswordReset, sendPoliceNotification, maskEmail } = require("../../utils/mail");
 
 // =====================================================
 // EXPRESS APP
@@ -855,7 +848,7 @@ app.post("/api/admin/request-reset", async (req, res) => {
 
         await sendAdminPasswordReset(email, resetLink);
 
-        console.log("✅ Admin reset email dispatched to SMTP relay");
+        console.log("✅ Admin reset email accepted by the shared email service");
 
         res.json({
             success: true,

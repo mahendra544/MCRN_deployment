@@ -5,7 +5,6 @@ if (nodeDns && nodeDns.setDefaultResultOrder) {
   nodeDns.setDefaultResultOrder("ipv4first");
 }
 const dns = nodeDns.promises;
-const nodemailer = require("nodemailer");
 
 let pool = null;
 try {
@@ -354,131 +353,37 @@ async function validateRecipientEmail(rawEmail, { isTestContext = false } = {}) 
 }
 
 // ----------------------------------------------------
-// SMTP TRANSPORTER CONFIGURATION
+// GOOGLE APPS SCRIPT API CONFIGURATION
 // ----------------------------------------------------
 
-let transporter = null;
+const GOOGLE_APPS_SCRIPT_REQUEST_TIMEOUT_MS = 15000;
 
-function createTransporter() {
-  const user = (process.env.MAIL_USERNAME || process.env.MAIL_USER || process.env.EMAIL_USER || "").trim();
-  const pass = (process.env.MAIL_PASSWORD || process.env.EMAIL_PASS || "").trim().replace(/\s+/g, "");
+function getGoogleAppsScriptConfig() {
+  const url = (process.env.GOOGLE_APPS_SCRIPT_URL || "").trim();
+  const secret = (process.env.MCRN_SECRET || "").trim();
+  if (!url || !secret) return null;
 
-  if (!user || !pass) {
+  try {
+    if (new URL(url).protocol !== "https:") return null;
+  } catch (_) {
     return null;
   }
 
-  const host = process.env.MAIL_HOST || process.env.SMTP_HOST || "smtp.gmail.com";
-  const port = Number(process.env.MAIL_PORT || process.env.SMTP_PORT || 587);
-  if (!Number.isInteger(port) || port < 1 || port > 65535) {
-    throw new Error("MAIL_PORT or SMTP_PORT must be a valid TCP port.");
-  }
-
-  // If port is 465, secure is true by default; for 587/25, STARTTLS (requireTLS) is standard
-  const secureEnv = process.env.MAIL_SECURE ?? process.env.SMTP_SECURE;
-  const secure = secureEnv !== undefined
-    ? String(secureEnv).toLowerCase() === "true"
-    : port === 465;
-  const requireTlsEnv = process.env.MAIL_REQUIRE_TLS ?? process.env.SMTP_REQUIRE_TLS;
-  const requireTLS = secure
-    ? false
-    : requireTlsEnv === undefined
-      ? true
-      : String(requireTlsEnv).toLowerCase() === "true";
-  const isProduction = process.env.NODE_ENV === "production" ||
-    String(process.env.CLOUD_MODE || "").toLowerCase() === "true";
-  if (isProduction && !secure && !requireTLS) {
-    throw new Error("MAIL_REQUIRE_TLS or SMTP_REQUIRE_TLS must be true for production SMTP.");
-  }
-
-  return nodemailer.createTransport({
-    host,
-    port,
-    secure,
-    requireTLS,
-    auth: { user, pass },
-    family: 4,
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 20000,
-    dnsTimeout: 10000,
-    tls: {
-      minVersion: "TLSv1.2",
-      servername: host
-    }
-  });
+  return { url, secret };
 }
 
 async function verifyMailer() {
-  try {
-    transporter = createTransporter();
-    if (!transporter) {
-      console.log("ℹ️ Mailer not configured with credentials (skipping SMTP verification).");
-      return false;
-    }
-    console.log("Testing SMTP connection...");
-    await transporter.verify();
-    console.log("✅ SMTP connection verified successfully.");
-    return true;
-  } catch (err) {
-    const safeError = categorizeSmtpError(err);
-    console.warn(`⚠️ SMTP verification notice [${safeError.category}]:`, safeError.safeMessage);
+  if (!getGoogleAppsScriptConfig()) {
+    console.log("[EMAIL] Google Apps Script email delivery is not configured; set GOOGLE_APPS_SCRIPT_URL and MCRN_SECRET.");
     return false;
   }
+  console.log("[EMAIL] Google Apps Script email delivery is configured.");
+  return true;
 }
 
-function categorizeSmtpError(err) {
-  if (!err) return { category: "UNKNOWN", safeMessage: "Unknown mail error" };
-
-  const msg = err.message || "";
-  const code = err.code || "";
-  const responseCode = err.responseCode || 0;
-
-  // Authentication error
-  if (code === "EAUTH" || responseCode === 535 || /invalid login|bad credentials|authentication failed/i.test(msg)) {
-    return {
-      category: "SMTP_AUTH_ERROR",
-      safeMessage: "SMTP authentication failed. Verify username and application password."
-    };
-  }
-
-  // Recipient mailbox error (550, 551, 553, 554)
-  if (responseCode >= 550 && responseCode <= 554) {
-    return {
-      category: "RECIPIENT_MAILBOX_ERROR",
-      isPermanent: true,
-      safeMessage: `Recipient mailbox rejected by destination mail server (code ${responseCode}).`
-    };
-  }
-
-  // Recipient server temporary timeout / throttling (421, 450, 451, 452)
-  if (responseCode >= 420 && responseCode <= 459) {
-    return {
-      category: "RECIPIENT_SERVER_TIMEOUT",
-      isPermanent: false,
-      safeMessage: `Recipient mail server temporarily timed out or throttled connection (code ${responseCode}).`
-    };
-  }
-
-  // SMTP connection failure
-  if (code === "ETIMEDOUT" || code === "ECONNREFUSED" || code === "ECONNRESET" || code === "ESOCKET") {
-    return {
-      category: "SMTP_CONNECTION_ERROR",
-      safeMessage: `Could not establish connection to SMTP server (${code}).`
-    };
-  }
-
-  // DNS failure to SMTP host
-  if (code === "EDNS" || (code === "ENOTFOUND" && /smtp/i.test(msg))) {
-    return {
-      category: "SMTP_HOST_DNS_ERROR",
-      safeMessage: "SMTP hostname could not be resolved in DNS."
-    };
-  }
-
-  return {
-    category: "MAIL_DELIVERY_ERROR",
-    safeMessage: "Mail delivery could not be completed."
-  };
+function getEmailErrorCode(error) {
+  const code = error?.code || error?.name || "EMAIL_DELIVERY_ERROR";
+  return String(code).replace(/[^A-Za-z0-9_-]/g, "").slice(0, 64) || "EMAIL_DELIVERY_ERROR";
 }
 
 // ----------------------------------------------------
@@ -535,8 +440,8 @@ async function sendMailSafe({ to, subject, html, text, from, isTestContext = fal
       });
     }
 
-    // Isolated in-memory dev mode (no remote SMTP call)
-    console.log(`[EMAIL_DEV_ISOLATED] Test address ${maskEmail(to)} handled in isolated development mode. Remote SMTP suppressed.`);
+    // Isolated in-memory dev mode (no remote API call)
+    console.log(`[EMAIL_DEV_ISOLATED] Test address ${maskEmail(to)} handled in isolated development mode. Remote delivery suppressed.`);
     return {
       accepted: true,
       status: "ISOLATED_DEV_SIMULATED",
@@ -545,51 +450,68 @@ async function sendMailSafe({ to, subject, html, text, from, isTestContext = fal
     };
   }
 
-  // 3. Remote SMTP delivery for real deliverable recipient
-  if (!transporter) {
-    transporter = createTransporter();
-  }
-  if (!transporter) {
-    console.error("[EMAIL] Mailer credentials are not configured; delivery was not attempted.");
+  // 3. Remote Google Apps Script delivery for real deliverable recipient
+  const config = getGoogleAppsScriptConfig();
+  if (!config) {
+    console.error("[EMAIL] Google Apps Script URL or secret is not configured; delivery was not attempted.");
     const error = new Error("Email delivery is not configured. Please contact support.");
-    error.code = "SMTP_NOT_CONFIGURED";
+    error.code = "GOOGLE_APPS_SCRIPT_NOT_CONFIGURED";
     error.status = 503;
     throw error;
   }
 
-  const senderUser = (process.env.MAIL_USERNAME || process.env.MAIL_USER || process.env.EMAIL_USER || "").trim();
-  const defaultFrom = senderUser
-    ? `"Missing Child Rescue Network" <${senderUser}>`
-    : "MCRN Security <no-reply@mcrn.org>";
-  const resolvedFrom = from || process.env.MAIL_FROM || defaultFrom;
+  const body = text || (html ? html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() : "");
+  const payload = {
+    secret: config.secret,
+    to: validation.email,
+    subject,
+    body,
+    ...(html ? { htmlBody: html } : {})
+  };
 
   try {
-    const info = await transporter.sendMail({
-      from: resolvedFrom,
-      to: validation.email,
-      subject,
-      text: text || undefined,
-      html: html || undefined
+    const response = await fetch(config.url, {
+      method: "POST",
+      redirect: "follow",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(GOOGLE_APPS_SCRIPT_REQUEST_TIMEOUT_MS)
     });
 
-    console.log(`[EMAIL] Dispatched to SMTP gateway (status: ACCEPTED_FOR_DELIVERY, messageId: ${info.messageId || "unknown"})`);
+    let result;
+    try {
+      result = await response.json();
+    } catch (_) {
+      const error = new Error("Email service returned an invalid response.");
+      error.code = "GOOGLE_APPS_SCRIPT_INVALID_RESPONSE";
+      error.status = 503;
+      throw error;
+    }
+
+    if (!response.ok || !result || result.success !== true) {
+      console.error(`[EMAIL] Google Apps Script rejected dispatch for ${maskEmail(to)} [HTTP ${response.status}].`);
+      const error = new Error("Email delivery could not be completed. Please try again later.");
+      error.code = "GOOGLE_APPS_SCRIPT_REJECTED";
+      error.status = 503;
+      throw error;
+    }
+
+    console.log(`[EMAIL] Google Apps Script accepted email request for ${maskEmail(to)}.`);
     return {
       accepted: true,
-      status: "ACCEPTED_BY_SMTP_RELAY",
-      messageId: info.messageId,
+      status: "ACCEPTED_BY_GOOGLE_APPS_SCRIPT",
       recipient: maskEmail(to)
     };
   } catch (err) {
-    const safeError = categorizeSmtpError(err);
-    console.error(`[EMAIL] Dispatch failed for ${maskEmail(to)} [${safeError.category}]: ${safeError.safeMessage}`);
+    if (err.status && err.code) throw err;
 
-    if (safeError.isPermanent) {
-      await recordPermanentFailure(to, safeError.safeMessage, safeError.category);
-    }
-
-    const dispatchError = new Error(safeError.safeMessage);
-    dispatchError.code = safeError.category;
-    dispatchError.status = safeError.category === "RECIPIENT_MAILBOX_ERROR" ? 400 : 503;
+    const code = getEmailErrorCode(err);
+    console.error(`[EMAIL] Google Apps Script request failed for ${maskEmail(to)} [${code}].`);
+    const dispatchError = new Error("Email delivery could not be completed. Please try again later.");
+    dispatchError.code = ["TypeError", "TimeoutError", "ETIMEDOUT", "ECONNRESET", "ECONNREFUSED", "EAI_AGAIN"].includes(code)
+      ? "GOOGLE_APPS_SCRIPT_NETWORK_ERROR"
+      : code;
+    dispatchError.status = 503;
     throw dispatchError;
   }
 }
@@ -696,7 +618,6 @@ async function sendPoliceNotification({ officerId, officerEmail, subject, text, 
 }
 
 module.exports = {
-  createTransporter,
   verifyMailer,
   sendOtp,
   sendMailSafe,

@@ -18,7 +18,7 @@ MCRN is engineered as a unified, production-ready full-stack application deploya
 - **Backend API**: Unified Express service modularized by domain (`auth`, `user`, `police`, `admin`, `reporting`), executed as a serverless API function on Vercel (`api/index.js`) or as an HTTP daemon locally/in cloud containers (`backend/src/server.js`).
 - **Database**: PostgreSQL database hosting normalized relational schemas for users, police profiles, missing cases, citizen reports, sightings, notifications, audit trails, and OTP verification tokens.
 - **Storage**: Supabase Storage (`missing-child-images` bucket) providing resilient cross-device media delivery for missing child photographs and investigation evidence.
-- **Email Service**: SMTP email delivery powered by Nodemailer with isolated development mode safety controls, automated address masking, and deliverability verification.
+- **Email Service**: Google Apps Script Web App HTTPS delivery with isolated development mode safety controls, automated address masking, and recipient validation.
 
 ---
 
@@ -68,7 +68,7 @@ MCRN/
 │   │   ├── police/                   # Police investigation routes & schema migrations
 │   │   ├── reporting/                # Report submission routes & dual-table sync
 │   │   ├── user/                     # Citizen dashboard & child directory routes
-│   │   ├── utils/                    # Email delivery & safety utilities (Nodemailer)
+│   │   ├── utils/                    # Email delivery & safety utilities
 │   │   ├── app.js                    # Master Express application definition
 │   │   └── server.js                 # Standalone HTTP server runner (local & container)
 │   ├── uploads/                      # Local media storage fallback (with .gitkeep)
@@ -81,7 +81,7 @@ MCRN/
 │
 ├── docs/                             # Extended deployment and setup documentation
 │   ├── CLOUD_DEPLOYMENT.md           # Cloud container hosting instructions
-│   ├── SMTP_SETUP.md                 # Gmail SMTP & application password configuration
+│   ├── GOOGLE_APPS_SCRIPT_SETUP.md   # Google Apps Script email configuration
 │   └── FIXES_INCLUDED.txt            # Architecture history & changelog
 │
 ├── integration/                      # Lightweight local web gateway
@@ -96,7 +96,7 @@ MCRN/
 ├── tests/                            # Comprehensive automated testing suite
 │   ├── api-tests.js                  # End-to-end API, health, and portal tests
 │   ├── db-test.js                    # Database connectivity & table schema verification
-│   ├── email-delivery-tests.js       # Email masking, safety, and SMTP tests
+│   ├── email-delivery-tests.js       # Email masking, safety, and Apps Script API tests
 │   ├── otp-lifecycle-tests.js        # Registration, login, OTP, and reset lifecycle
 │   ├── supabase-storage-e2e.js       # Cross-device report image upload verification
 │   └── workflow-tests.js             # Full cross-role workflow verification suite
@@ -118,7 +118,7 @@ MCRN/
 - **Backend**: Node.js 22/24, Express 4, Helmet, CORS, Zod, BcryptJS, JSONWebToken, Multer
 - **Database**: PostgreSQL (Supabase / Neon / AWS RDS / Local), `pg` driver with connection pooling
 - **Storage**: Supabase Storage (`@supabase/supabase-js`)
-- **Email Delivery**: Nodemailer with SMTP TLS/SSL transport
+- **Email Delivery**: Google Apps Script Web App over HTTPS
 - **Deployment**: Vercel Serverless Functions (`api/index.js`) + Vercel Edge Static CDN
 
 ---
@@ -139,7 +139,7 @@ cd Missing_child_Rescue_Network
 cp .env.example .env
 ```
 
-Edit `.env` to configure your PostgreSQL credentials, JWT secret, Supabase credentials, and SMTP credentials.
+Edit `.env` to configure your PostgreSQL credentials, JWT secret, Supabase credentials, and Google Apps Script email credentials.
 
 ### 2. One-Click Setup
 
@@ -211,28 +211,24 @@ When an image is submitted via `/api/report-child` or `/api/sightings`, MCRN str
 
 ---
 
-## SMTP & Email Service Configuration
+## Google Apps Script Email Service Configuration
 
-Account verification and password recovery use SMTP email delivery.
-
-Configure in `.env`:
+Authentication OTPs, admin password-reset emails, and police notifications are sent to the configured Google Apps Script Web App over HTTPS. Configure the Web App URL and its shared secret only in the backend environment (local `.env` or the Render backend Environment settings):
 ```env
-MAIL_HOST=smtp.gmail.com
-MAIL_PORT=587
-MAIL_SECURE=false
-MAIL_REQUIRE_TLS=true
-MAIL_USERNAME=your_email@gmail.com
-MAIL_PASSWORD=your_gmail_app_password
-MAIL_FROM=MCRN Security <your_email@gmail.com>
+GOOGLE_APPS_SCRIPT_URL=
+MCRN_SECRET=
 ```
 
-Check SMTP configuration and connectivity without sending an email:
+The Web App should accept JSON `POST` requests with `secret`, `to`, `subject`, and `body`, plus `htmlBody` when available. It must return JSON containing `"success": true` only after accepting the email. Google Apps Script redirects are followed by the backend, which checks the final JSON response rather than trusting an HTTP 200 status alone. Keep both values secret/server-side; do not put them in frontend configuration.
+
+To send a diagnostic email, explicitly configure the test inbox first:
 ```bash
-npm --prefix backend run smtp:check
+EMAIL_DIAGNOSTIC_RECIPIENT=your_test_inbox@gmail.com npm --prefix backend run email:diagnostic
 ```
+The diagnostic refuses placeholder/generated test addresses and sends only to that configured recipient. See [Google Apps Script setup](./docs/GOOGLE_APPS_SCRIPT_SETUP.md) for details.
 
 ### Safety Features
-- **Isolated Development Mode**: Set `MCRN_DEV_OTP_MODE=true` during testing to log OTP codes to the terminal and suppress live remote transmission to fictional/placeholder addresses.
+- **Isolated Development Mode**: Set `MCRN_DEV_OTP_MODE=true` during testing to suppress live remote transmission to fictional/placeholder addresses.
 - **Recipient Domain Protection**: Delivery to known test/placeholder domains (`example.com`, `mcrn-test.org`, `police.mcrn.org`) is automatically classified and isolated.
 - **Log Masking**: Recipient addresses are automatically masked in logs (e.g., `u***r@example.com`) to protect personal data.
 
@@ -249,7 +245,7 @@ npm run check
 # 2. Database connectivity & schema tables check
 node tests/db-test.js
 
-# 3. Email safety, masking, and SMTP transporter tests
+# 3. Email safety, masking, and mocked Google Apps Script API tests
 node tests/email-delivery-tests.js
 
 # 4. End-to-end API, health, and multi-portal tests (requires backend running)
@@ -312,13 +308,8 @@ ONE VERCEL PROJECT
    | `JWT_SECRET` | Secret key for JWT session tokens | Min 32 chars random string |
    | `JWT_EXPIRES_IN` | Session expiration window | `1h` |
    | `CORS_ORIGINS` | Allowed frontend origins | Explicit Vercel domain(s), comma-separated |
-   | `MAIL_HOST` | SMTP server host | `smtp.gmail.com` |
-   | `MAIL_PORT` | SMTP port | `587` |
-   | `MAIL_SECURE` | SSL transport | `false` |
-   | `MAIL_REQUIRE_TLS` | Require TLS | `true` |
-   | `MAIL_USERNAME` | SMTP account email | `your-org@gmail.com` |
-   | `MAIL_PASSWORD` | SMTP application password | 16-character App Password |
-   | `MAIL_FROM` | Sender display string | `MCRN Security <your-org@gmail.com>` |
+   | `GOOGLE_APPS_SCRIPT_URL` | Google Apps Script Web App deployment URL | HTTPS URL; backend only |
+   | `MCRN_SECRET` | Shared secret expected by the email Web App | Configure privately on both backend and Apps Script |
    | `ADMIN_DEFAULT_PASSWORD` | Initial admin account password | Strong secret password |
    | `ADMIN_EMAILS` | Comma-separated admin emails | `admin@example.com` |
    | `RESET_SECRET` | Secret for admin password resets | Random string |
@@ -331,13 +322,13 @@ ONE VERCEL PROJECT
 
 ### Separate Frontend and Backend Deployment
 
-The frontend can also be deployed from the `frontend` project root to Vercel, with the Express service deployed from `backend` as a long-running Render Web Service. Set the frontend build-time variable `VITE_API_URL` to the backend origin (for example, `https://YOUR-BACKEND-DOMAIN`); the frontend adds the `/api` prefix consistently. On the backend, set `CORS_ORIGINS` to the exact frontend origin (for example, `https://YOUR-FRONTEND-DOMAIN`) and set `PORT` through the hosting platform. Keep database, SMTP, JWT, and Supabase secrets only in the backend environment. Do not include localhost origins in production configuration.
+The frontend can also be deployed from the `frontend` project root to Vercel, with the Express service deployed from `backend` as a long-running Render Web Service. Set the frontend build-time variable `VITE_API_URL` to the backend origin (for example, `https://YOUR-BACKEND-DOMAIN`); the frontend adds the `/api` prefix consistently. On the backend, set `CORS_ORIGINS` to the exact frontend origin (for example, `https://YOUR-FRONTEND-DOMAIN`) and set `PORT` through the hosting platform. Keep database, Google Apps Script, JWT, and Supabase secrets only in the backend environment. Do not include localhost origins in production configuration.
 
 ---
 
 ## Security Instructions
 
 1. **No Credentials in Git**: Never commit `.env` or files containing live credentials. All `.env*` files except `.env.example` and `.env.cloud.example` are strictly excluded by `.gitignore`.
-2. **Server-Side Secrets**: `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`, and `MAIL_PASSWORD` must only be configured in server-side environment variables. They are never exposed to frontend code or client bundles.
+2. **Server-Side Secrets**: `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`, and `MCRN_SECRET` must only be configured in server-side environment variables. They are never exposed to frontend code or client bundles.
 3. **Stateless Serverless Execution**: `api/index.js` runs statelessly without relying on persistent local disk storage. All uploaded media must use Supabase Storage in production.
 4. **Least-Privilege Database Access**: Use connection pooling with standard transaction timeouts for serverless PostgreSQL connectivity.

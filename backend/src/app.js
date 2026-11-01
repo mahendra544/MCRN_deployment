@@ -19,7 +19,6 @@ const policeRouter = require("./police/routes");
 const adminRouter = require("./admin/routes");
 const { requireAuth } = require("./middleware");
 const { ensurePoliceSchema } = require("./police/schema");
-const { verifyMailer } = require("./utils/mail");
 const { ensureBucketExists, BUCKET_NAME } = require("./config/supabase");
 
 const app = express();
