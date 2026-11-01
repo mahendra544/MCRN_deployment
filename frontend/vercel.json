@@ -1,0 +1,27 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "rewrites": [
+    { "source": "/admin(/.*)?", "destination": "/admin.html" },
+    { "source": "/police-dashboard(/.*)?", "destination": "/police.html" },
+    { "source": "/police-cases(/.*)?", "destination": "/police.html" },
+    { "source": "/police-verify(/.*)?", "destination": "/police.html" },
+    { "source": "/police-search(/.*)?", "destination": "/police.html" },
+    { "source": "/police-notifications(/.*)?", "destination": "/police.html" },
+    { "source": "/police-profile(/.*)?", "destination": "/police.html" },
+    { "source": "/police(/.*)?", "destination": "/police.html" },
+    { "source": "/user-dashboard(/.*)?", "destination": "/user.html" },
+    { "source": "/search-children(/.*)?", "destination": "/user.html" },
+    { "source": "/child/(.*)", "destination": "/user.html" },
+    { "source": "/report-sighting(/.*)?", "destination": "/user.html" },
+    { "source": "/about-us(/.*)?", "destination": "/user.html" },
+    { "source": "/my-cases(/.*)?", "destination": "/user.html" },
+    { "source": "/notifications(/.*)?", "destination": "/user.html" },
+    { "source": "/user(/.*)?", "destination": "/user.html" },
+    { "source": "/contact-us(/.*)?", "destination": "/contact.html" },
+    { "source": "/reporting(/.*)?", "destination": "/reporting.html" },
+    { "source": "/report-child(/.*)?", "destination": "/reporting.html" },
+    { "source": "/reports(/.*)?", "destination": "/reporting.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
