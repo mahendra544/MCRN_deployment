@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /user-dashboard
+Disallow: /police-dashboard
+Disallow: /police
+Disallow: /profile
+Disallow: /forgot
+Disallow: /reset
+
+Sitemap: https://mcrn-deployment.vercel.app/sitemap.xml
